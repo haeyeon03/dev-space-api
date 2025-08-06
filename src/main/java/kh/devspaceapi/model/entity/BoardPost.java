@@ -11,19 +11,16 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SequenceGenerator(name = "board_seq_gen", sequenceName = "POST_SEQ", initialValue = 1, allocationSize = 1)
+@SequenceGenerator(name = "board_post_seq_gen", sequenceName = "BOARD_POST_SEQ", allocationSize = 1)
 public class BoardPost extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "board_seq_gen")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "board_post_seq_gen")
     private Long boardPostId;
     private String title;
     private String category;
-
-    @Lob// DB Table 필드의 타입
+    @Lob // DB Table 필드의 타입
     private String content;
-
     @ManyToOne(fetch = FetchType.LAZY)
-
     @JoinColumn(name = "USER_ID", referencedColumnName = "USER_ID")
     private Users user;
 }

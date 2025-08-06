@@ -12,16 +12,15 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SequenceGenerator(name = "image_seq_gen", sequenceName = "NEWS_SEQ", initialValue = 1, allocationSize = 1)
+@SequenceGenerator(name = "post_image_seq_gen", sequenceName = "POST_IMAGE_SEQ", allocationSize = 1)
 public class PostImage extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "image_seq_gen")
-    private Long imageId;
-    private String path;
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "post_image_seq_gen")
+    private Long postImageId;
+    private String filename;
     private Long targetId; // FK (NewsPostId or BoardPostId)
     @Enumerated(EnumType.STRING)
     private TargetType targetType;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "USER_ID")
     private Users user;

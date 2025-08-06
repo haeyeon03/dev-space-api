@@ -2,10 +2,10 @@ package kh.devspaceapi.service.impl;
 
 import jakarta.persistence.EntityNotFoundException;
 import kh.devspaceapi.model.dto.newsPost.NewsPostResponseDto;
-import kh.devspaceapi.model.entity.Comments;
+import kh.devspaceapi.model.entity.PostComment;
 import kh.devspaceapi.model.entity.NewsPost;
 import kh.devspaceapi.model.entity.enums.TargetType;
-import kh.devspaceapi.repository.CommentRepository;
+import kh.devspaceapi.repository.PostCommentRepository;
 import kh.devspaceapi.repository.NewsPostRepository;
 import kh.devspaceapi.service.NewsPostService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,7 @@ public class NewsPostServiceImpl implements NewsPostService {
     private NewsPostRepository newsPostRepository;
 
     @Autowired
-    private CommentRepository commentRepository;
+    private PostCommentRepository postCommentRepository;
 
     /**
      * 지정한 뉴스 게시글 ID에 해당하는 뉴스 게시글과 관련된 댓글, 좋아요 정보를 조회
@@ -34,7 +34,7 @@ public class NewsPostServiceImpl implements NewsPostService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 뉴스 게시글을 찾을 수 없습니다. ID: " + newsPostId));
         // newsPost -> NewsPostResponseDto 변환
 
-        List<Comments> comments = commentRepository.findByTargetIdAndTargetTypeOrderByCommentIdDesc(newsPost.getNewsPostId(), TargetType.NEWS);
+        List<PostComment> comments = postCommentRepository.findByTargetIdAndTargetTypeOrderByCommentIdDesc(newsPost.getNewsPostId(), TargetType.NEWS);
         // comments -> CommentResponseDto 변환
 
         // postLike 도 같은 방식으로 조회

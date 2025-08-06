@@ -12,18 +12,15 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-
+@SequenceGenerator(name = "post_like_seq_gen", sequenceName = "POST_LIKE_SEQ", allocationSize = 1)
 public class PostLike extends BaseEntity {
     @Id
-
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "post_like_seq_gen")
     private Long postLikeId; // 데이터 특성상 '반드시' deletion 필요
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "USER_ID")
     private Users user;
-
     private Long targetId; // FK (NewsPostId or BoardPostId)
-
     @Enumerated(EnumType.STRING)
     private TargetType targetType;
 }

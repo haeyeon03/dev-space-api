@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: dev-space-api
+  datasource:
+    driver-class-name: oracle.jdbc.OracleDriver
+    url: jdbc:oracle:thin:@localhost:1521:xe
+    username: devspace
+    password: devspace1234
+  jpa:
+    database: oracle
+    database-platform: org.hibernate.dialect.OracleDialect
+    properties:
+      hibernate:
+        id:
+          new_generator_mappings: false
+        format_sql: true
+    hibernate:
+      ddl-auto: create
+    generate-ddl: true
+    show-sql: true
+
+# H2 for Dev
+#  datasource:
+#    url: jdbc:h2:mem:testdb
+#    driver-class-name: org.h2.Driver
+#    username: sa
+#    password: ""
+#
+#  h2:
+#    console:
+#      enabled: true
+#      path: /h2-console

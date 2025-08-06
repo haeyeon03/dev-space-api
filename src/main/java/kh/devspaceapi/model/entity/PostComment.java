@@ -8,24 +8,20 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "COMMENTS")
+@Table(name = "POST_COMMENT")
 @Getter
 @Setter
 @NoArgsConstructor
-@SequenceGenerator(name = "comments_seq_gen", sequenceName = "COMMENTS_SEQ", initialValue = 1, allocationSize = 1)
-public class Comments extends BaseEntity {
-
+@SequenceGenerator(name = "post_comment_seq_gen", sequenceName = "POST_COMMENT_SEQ", allocationSize = 1)
+public class PostComment extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long commentId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "post_comment_seq_gen")
+    private Long postCommentId;
     private String content;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "USER_ID")
     private Users user;
-
     private Long targetId; // FK (NewsPostId or BoardPostId)
-
     @Enumerated(EnumType.STRING)
     private TargetType targetType;
 }

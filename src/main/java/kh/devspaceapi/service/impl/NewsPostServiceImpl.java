@@ -34,7 +34,7 @@ public class NewsPostServiceImpl implements NewsPostService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 뉴스 게시글을 찾을 수 없습니다. ID: " + newsPostId));
         // newsPost -> NewsPostResponseDto 변환
 
-        List<PostComment> comments = postCommentRepository.findByTargetIdAndTargetTypeOrderByCommentIdDesc(newsPost.getNewsPostId(), TargetType.NEWS);
+        List<PostComment> comments = postCommentRepository.findByTargetIdAndTargetTypeOrderByPostCommentIdDesc(newsPost.getNewsPostId(), TargetType.NEWS);
         // comments -> CommentResponseDto 변환
 
         // postLike 도 같은 방식으로 조회

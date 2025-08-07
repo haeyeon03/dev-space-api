@@ -20,6 +20,4 @@ public class UsersResponseDto {
         this.totalComments = boardTotal;
     }
 	
-	
-
 }

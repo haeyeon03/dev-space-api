@@ -1,6 +1,8 @@
 package kh.devspaceapi.service.impl;
 
 import jakarta.persistence.EntityNotFoundException;
+import kh.devspaceapi.comm.exception.BusinessException;
+import kh.devspaceapi.comm.exception.ErrorCode;
 import kh.devspaceapi.model.dto.newsPost.NewsPostResponseDto;
 import kh.devspaceapi.model.entity.PostComment;
 import kh.devspaceapi.model.entity.NewsPost;
@@ -31,7 +33,7 @@ public class NewsPostServiceImpl implements NewsPostService {
     @Override
     public NewsPostResponseDto getNewsPostById(Long newsPostId) {
         NewsPost newsPost = newsPostRepository.findById(newsPostId)
-                .orElseThrow(() -> new EntityNotFoundException("해당 뉴스 게시글을 찾을 수 없습니다. ID: " + newsPostId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NO_EXIST_NEWS_POST));
         // newsPost -> NewsPostResponseDto 변환
 
         List<PostComment> comments = postCommentRepository.findByTargetIdAndTargetTypeOrderByPostCommentIdDesc(newsPost.getNewsPostId(), TargetType.NEWS);
@@ -40,7 +42,6 @@ public class NewsPostServiceImpl implements NewsPostService {
         // postLike 도 같은 방식으로 조회
         // postLike -> PostLikeResponseDto 변환
 
-        System.out.println("cs");
 //        NewsPostResponseDto.setComments(comments);
 //        NewsPostResponseDto.setPostLikes(comments);
 

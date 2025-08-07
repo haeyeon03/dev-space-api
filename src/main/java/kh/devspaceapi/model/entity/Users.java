@@ -5,9 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import kh.devspaceapi.model.entity.base.BaseEntity;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 
@@ -16,6 +14,8 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor
+@Builder
+@AllArgsConstructor
 public class Users extends BaseEntity {
     @Id
     @Column(name = "USER_ID")

@@ -39,7 +39,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("0") // User 의 Role 이 0 인 사용자만 인가
+                        .requestMatchers("/api/admin/**").hasAnyAuthority("1")
+//                        .requestMatchers("/api/admin/**").hasRole("ROLE_0") hasRole 은 접두사 "ROLE_" 이 붙음.
                         .anyRequest().authenticated()
                 )
                 // JwtFilter 에서는 통과, 그 이후 Security 에서 발생하는 예외 처리

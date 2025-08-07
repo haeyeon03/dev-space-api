@@ -10,5 +10,5 @@ public interface NewsPostService {
      * @param newsPostId 조회할 뉴스 게시글의 고유 ID
      * @return NewsPostResponseDto 뉴스 게시글의 상세 정보를 담은 DTO 객체
      */
-    NewsPostResponseDto getNewsPost(Long newsPostId);
+    NewsPostResponseDto getNewsPostById(Long newsPostId);
 }

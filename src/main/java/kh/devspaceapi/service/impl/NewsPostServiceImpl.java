@@ -29,7 +29,7 @@ public class NewsPostServiceImpl implements NewsPostService {
      * @throws EntityNotFoundException 해당 ID의 뉴스 게시글이 없을 경우 발생
      */
     @Override
-    public NewsPostResponseDto getNewsPost(Long newsPostId) {
+    public NewsPostResponseDto getNewsPostById(Long newsPostId) {
         NewsPost newsPost = newsPostRepository.findById(newsPostId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 뉴스 게시글을 찾을 수 없습니다. ID: " + newsPostId));
         // newsPost -> NewsPostResponseDto 변환

@@ -1,4 +1,4 @@
-package kh.devspaceapi.model.dto.admin.stats;
+ package kh.devspaceapi.model.dto.admin.stats;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

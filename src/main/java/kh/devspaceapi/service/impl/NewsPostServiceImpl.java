@@ -109,7 +109,7 @@ public class NewsPostServiceImpl implements NewsPostService {
 	/**
 	 * 뉴스 게시글 및 해당 게시글에 달린 모든 댓글을 논리적으로 삭제 처리 (물리 삭제(DELETE) 대신 active 필드를 false로
 	 * 변경)
-	 * 
+	 *
 	 * @param newsPostId 조회할 뉴스 게시글의 고유 ID
 	 * @return 삭제 성공 시 1L, 실패 시 0L
 	 * @throws IllegalArgumentException 해당 ID의 뉴스 게시글이 존재하지 않을 경우 발생

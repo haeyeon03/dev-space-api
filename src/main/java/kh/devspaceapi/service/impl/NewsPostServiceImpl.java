@@ -4,6 +4,7 @@ import java.util.List;
 
 import kh.devspaceapi.model.mapper.NewPostMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -107,9 +108,8 @@ public class NewsPostServiceImpl implements NewsPostService {
 
 
 	@Override
-	public void deleteNewsPost(Long newsPostId) {
-		// TODO Auto-generated method stub
-		
+	public Long deleteNewsPost(Long newsPostId) {
+		return 0L;
 	}
 
 }

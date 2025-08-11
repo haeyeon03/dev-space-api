@@ -3,6 +3,7 @@ package kh.devspaceapi.controller;
 import java.util.List;
 import java.util.Map;
 
+import kh.devspaceapi.comm.response.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -71,9 +72,9 @@ public class NewsPostController {
 	 * @return 삭제 정상 처리 후 리스트 반환
 	 */
 	@DeleteMapping("/{newsPostId}")
-	ResponseEntity<Map<String, String>> deleteNewsPost(@PathVariable Long newsPostId) {
-		newsPostService.deleteNewsPost(newsPostId);
-		return ResponseEntity.ok(Map.of("message", "삭제가 완료되었습니다."));
+	ResponseEntity<Long> deleteNewsPost(@PathVariable Long newsPostId) {
+		Long removed = newsPostService.deleteNewsPost(newsPostId);
+		return ResponseEntity.ok(removed);
 
 	}
 }

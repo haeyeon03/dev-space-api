@@ -1,9 +1,6 @@
 package kh.devspaceapi.service;
 
-import java.util.List;
-
 import kh.devspaceapi.comm.response.PageResponse;
-import kh.devspaceapi.model.dto.newsPost.CommentResponseDto;
 import kh.devspaceapi.model.dto.newsPost.NewsPostRequestDto;
 import kh.devspaceapi.model.dto.newsPost.NewsPostResponseDto;
 
@@ -30,6 +27,6 @@ public interface NewsPostService {
 	 *
 	 * @param newsPostId 삭제할 뉴스 게시글의 고유 ID
 	 */
-	public void deleteNewsPost(Long newsPostId);
+	public Long deleteNewsPost(Long newsPostId);
 
 }

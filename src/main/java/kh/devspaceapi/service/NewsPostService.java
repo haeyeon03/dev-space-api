@@ -3,7 +3,6 @@ package kh.devspaceapi.service;
 import java.util.List;
 
 import kh.devspaceapi.comm.response.PageResponse;
-import kh.devspaceapi.model.dto.newsPost.CommentResponseDto;
 import kh.devspaceapi.model.dto.newsPost.NewsPostRequestDto;
 import kh.devspaceapi.model.dto.newsPost.NewsPostResponseDto;
 

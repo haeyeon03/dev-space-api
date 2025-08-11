@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class newPostMapper implements GenericMapper<NewsPostResponseDto, NewsPost> {
+public class NewPostMapper implements GenericMapper<NewsPostResponseDto, NewsPost> {
 //    @Autowired Modelmapper modelmapper;
 
     @Override
@@ -16,9 +16,14 @@ public class newPostMapper implements GenericMapper<NewsPostResponseDto, NewsPos
         return null;
     }
 
-    @Override
+    // NewsPost → NewsPostResponseDto 변환 메서드
     public NewsPostResponseDto toDto(NewsPost entity) {
-        return null;
+        NewsPostResponseDto dto = new NewsPostResponseDto();
+        dto.setNewsPostId(entity.getNewsPostId());
+        dto.setTitle(entity.getTitle());
+        dto.setContent(entity.getContent());
+        dto.setUpdatedAt(entity.getUpdatedAt());
+        return dto;
     }
 
     @Override

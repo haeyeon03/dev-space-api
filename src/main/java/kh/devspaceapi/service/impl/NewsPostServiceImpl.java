@@ -2,6 +2,7 @@ package kh.devspaceapi.service.impl;
 
 import java.util.List;
 
+import kh.devspaceapi.model.mapper.NewPostMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,6 +33,9 @@ public class NewsPostServiceImpl implements NewsPostService {
 	@Autowired
 	private PostCommentRepository postCommentRepository;
 
+	@Autowired
+	private NewPostMapper newPostMapper;
+
 	/**
 	 * 지정한 뉴스 게시글 ID에 해당하는 뉴스 게시글과 관련된 댓글, 좋아요 정보를 조회
 	 *
@@ -60,15 +64,14 @@ public class NewsPostServiceImpl implements NewsPostService {
 	}
 
 	/**
-	 * 
-	 * @param 뉴스 게시글 검색어 설정 후 조회 API 전체(검색어 설정을 안 했을 경우) 내용으로 검색 제목으로 검색 내용+전체로 검색
+	 * 뉴스 게시글 검색어 설정 후 조회 API
+	 * 전체(검색어 설정을 안 했을 경우) 내용으로 검색 제목으로 검색 내용+전체로 검색
+	 *
 	 * @return NewsPostResponseDto데이터 들이 페이지 단위로 끊긴 게시글 응답
 	 * @throws EntityNotFoundException 해당 제목 / 내용에 따른 뉴스 게시글이 없을 경우 발생
 	 */
 	@Override
 	public PageResponse<NewsPostResponseDto> getNewsPost(NewsPostRequestDto request) {
-		log.info("NewsPostServiceImpl.getNewsPost 요청: page={}, size={}, title={}, content={}", request.getCurPage(),
-				request.getPageSize(), request.getTitle(), request.getContent());
 
 		if (request.getCurPage() > 0) {
 			request.setCurPage(request.getCurPage() - 1);
@@ -96,22 +99,12 @@ public class NewsPostServiceImpl implements NewsPostService {
 		}
 
 		// **Entity -> DTO 변환 (수동)**
-		Page<NewsPostResponseDto> dtoPage = newsPostList.map(this::toDto);
+		Page<NewsPostResponseDto> dtoPage = newsPostList.map(newPostMapper::toDto);
 
 		// PageResponse 생성자에 Page 넣어서 반환
 		return new PageResponse<>(dtoPage);
 	}
 
-	// NewsPost → NewsPostResponseDto 변환 메서드
-	private NewsPostResponseDto toDto(NewsPost entity) {
-		NewsPostResponseDto dto = new NewsPostResponseDto();
-		dto.setNewsPostId(entity.getNewsPostId());
-		dto.setTitle(entity.getTitle());
-		dto.setContent(entity.getContent());
-		dto.setUpdatedAt(entity.getUpdatedAt());
-		return dto;
-
-	}
 
 	@Override
 	public void deleteNewsPost(Long newsPostId) {

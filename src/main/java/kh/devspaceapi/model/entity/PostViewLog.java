@@ -34,7 +34,7 @@ public class PostViewLog {
 	// BoardPost, NewsPost 조회수 표시기능 추가를 위해 만든 엔티티
 	// PostComment의 조회수는 관리자 대시보드 데이터 집계용으로 사용
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY, generator = "post_view_count_seq_gen")
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "post_view_count_seq_gen")
 	private Long postViewId;
 	/*
 	 * board, news, comment의 pk가 들어오는 컬럼

@@ -35,6 +35,7 @@ public class NewsPostController {
 	 */
 	@GetMapping("/{newsPostId}")
 	public ResponseEntity<NewsPostResponseDto> getNewsPostById(@PathVariable Long newsPostId) {
+		log.info(newsPostId.toString());
 		NewsPostResponseDto newsPost = newsPostService.getNewsPostById(newsPostId);
 		return ResponseEntity.ok(newsPost);
 	}
@@ -66,14 +67,15 @@ public class NewsPostController {
 	}
 
 	/**
+	 * 뉴스 게시글 조회 후 삭제 
 	 * 
-	 * @param newsPostId 조회하여 뉴스 게시글 삭제
-	 * @return 삭제 정상 처리 후 리스트 반환
+	 * @param newsPostId 조회하여 뉴스 게시글 삭제 처리
+	 * @return false로 변환 처리 후 리스트 반환
 	 */
 	@DeleteMapping("/{newsPostId}")
-	ResponseEntity<Map<String, String>> deleteNewsPost(@PathVariable Long newsPostId) {
-		newsPostService.deleteNewsPost(newsPostId);
-		return ResponseEntity.ok(Map.of("message", "삭제가 완료되었습니다."));
+	ResponseEntity<Long> deleteNewsPost(@PathVariable Long newsPostId) {
+		long removed = newsPostService.deleteNewsPost(newsPostId);
+		return ResponseEntity.ok(removed);
 
 	}
 }

@@ -15,7 +15,7 @@ import lombok.Setter;
 @SequenceGenerator(name = "post_comment_seq_gen", sequenceName = "POST_COMMENT_SEQ", allocationSize = 1)
 public class PostComment extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "post_comment_seq_gen")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "post_comment_seq_gen")
     private Long postCommentId;
     private String content;
     @ManyToOne(fetch = FetchType.LAZY)

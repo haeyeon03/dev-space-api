@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @SequenceGenerator(name = "user_penalty_seq_gen", sequenceName = "POST_LIKE_SEQ", allocationSize = 1)
 public class UserPenalty extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "user_penalty_seq_gen")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_penalty_seq_gen")
     private int userPenaltyId; // 패널티 ID (PK)
     private String reason; // 신고 사유
     // 사용자가 신고를 접수한 날짜 및 시간 (필수 입력)

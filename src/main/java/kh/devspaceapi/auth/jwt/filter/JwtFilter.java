@@ -22,37 +22,40 @@ import java.io.IOException;
 @Log4j2
 @Component
 public class JwtFilter extends OncePerRequestFilter {
-    @Autowired
-    private JwtProvider jwtProvider;
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        log.info("Entered JwtFilter!");
-        log.info("Request URL is {}", request.getRequestURI());
-        String accessToken = resolveToken(request);
-        log.info("Access Token is {}", accessToken);
+	@Autowired
+	private JwtProvider jwtProvider;
 
-        if (StringUtils.hasText(accessToken)) {
-            try {
-                Claims claims = jwtProvider.parseToken(accessToken);
-                String userId = claims.get("userId", String.class);
-                String role = claims.get("role", String.class);
-                System.out.println(role);
-                CustomUserDetails user = new CustomUserDetails(userId, role);
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            } catch (JwtException e) {
-                request.setAttribute("JWT_EXCEPTION", e);
-            }
-        }
-        filterChain.doFilter(request, response);
-    }
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
+		log.info("Entered JwtFilter!");
+		log.info("Request URL is {}", request.getRequestURI());
+		String accessToken = resolveToken(request);
+		log.info("Access Token is {}", accessToken);
 
-    private String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        return null;
-    }
+		if (StringUtils.hasText(accessToken)) {
+			try {
+				Claims claims = jwtProvider.parseToken(accessToken);
+				String userId = claims.get("userId", String.class);
+				String role = claims.get("role", String.class);
+				System.out.println(role);
+				CustomUserDetails user = new CustomUserDetails(userId, role);
+				UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null,
+						user.getAuthorities());
+				auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+				SecurityContextHolder.getContext().setAuthentication(auth);
+			} catch (JwtException e) {
+				request.setAttribute("JWT_EXCEPTION", e);
+			}
+		}
+		filterChain.doFilter(request, response);
+	}
+
+	private String resolveToken(HttpServletRequest request) {
+		String bearerToken = request.getHeader("Authorization");
+		if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+			return bearerToken.substring(7);
+		}
+		return null;
+	}
 }

@@ -29,6 +29,6 @@ public interface NewsPostService {
 	 *
 	 * @param newsPostId 삭제할 뉴스 게시글의 고유 ID
 	 */
-	public void deleteNewsPost(Long newsPostId);
+	public Long deleteNewsPost(Long newsPostId);
 
 }

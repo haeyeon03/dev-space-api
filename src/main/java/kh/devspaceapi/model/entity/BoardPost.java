@@ -1,5 +1,7 @@
 package kh.devspaceapi.model.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import kh.devspaceapi.model.entity.base.BaseEntity;
 import lombok.Getter;
@@ -23,4 +25,6 @@ public class BoardPost extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "USER_ID", referencedColumnName = "USER_ID")
     private Users user;
+    private int viewCount;
+    private int commentCount;
 }

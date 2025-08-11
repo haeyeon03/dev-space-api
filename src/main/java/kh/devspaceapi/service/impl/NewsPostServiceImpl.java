@@ -68,7 +68,7 @@ public class NewsPostServiceImpl implements NewsPostService {
 	/**
 	 * 뉴스 게시글 검색어 설정 후 조회 API 전체(검색어 설정을 안 했을 경우) 내용으로 검색 제목으로 검색 내용+전체로 검색
 	 *
-	 * @return NewsPostResponseDto데이터 들이 페이지 단위로 끊긴 게시글 응답
+	 * @return NewsPostResponseDto데이터 들이 페이지 단위로 끊긴 게시글 응답(active = true)
 	 * @throws EntityNotFoundException 해당 제목 / 내용에 따른 뉴스 게시글이 없을 경우 발생
 	 */
 	@Override
@@ -87,16 +87,16 @@ public class NewsPostServiceImpl implements NewsPostService {
 
 		// 내용으로 검색
 		if ((title == null || title.isBlank()) && (content != null && !content.isBlank())) {
-			newsPostList = newsPostRepository.findAllByContentContaining(content, pageable);
+			newsPostList = newsPostRepository.findAllByContentContainingAndActiveTrue(content, pageable);
 			// 제목으로 검색
 		} else if ((title != null && !title.isBlank()) && (content == null || content.isBlank())) {
-			newsPostList = newsPostRepository.findAllByTitleContaining(title, pageable);
+			newsPostList = newsPostRepository.findAllByTitleContainingAndActiveTrue(title, pageable);
 			// 제목 + 내용 검색
 		} else if ((title != null && !title.isBlank()) && (content != null && !content.isBlank())) {
-			newsPostList = newsPostRepository.findAllByTitleContainingAndContentContaining(title, content, pageable);
+			newsPostList = newsPostRepository.findAllByTitleContainingAndContentContainingAndActiveTrue(title, content, pageable);
 		} else {
 			// 전체 검색
-			newsPostList = newsPostRepository.findAll(pageable);
+			newsPostList = newsPostRepository.findAllByActiveTrue(pageable);
 		}
 
 		// **Entity -> DTO 변환 (수동)**

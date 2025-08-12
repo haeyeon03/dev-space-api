@@ -15,9 +15,16 @@ spring:
           new_generator_mappings: false
         format_sql: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     generate-ddl: true
     show-sql: true
+
+api:
+  naver:
+    host: https://openapi.naver.com
+    uri: /v1/search/news.json
+    client-id: gMvuy5t65gjpfim29RXR
+    client-secret: ${CLIENT_SECRET} # 환경변수로 관리
 
 # H2 for Dev
 #  datasource:

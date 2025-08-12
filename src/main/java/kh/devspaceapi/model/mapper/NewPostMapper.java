@@ -18,12 +18,7 @@ public class NewPostMapper implements GenericMapper<NewsPostResponseDto, NewsPos
 
     // NewsPost → NewsPostResponseDto 변환 메서드
     public NewsPostResponseDto toDto(NewsPost entity) {
-        NewsPostResponseDto dto = new NewsPostResponseDto();
-        dto.setNewsPostId(entity.getNewsPostId());
-        dto.setTitle(entity.getTitle());
-        dto.setContent(entity.getContent());
-        dto.setUpdatedAt(entity.getUpdatedAt());
-        return dto;
+        return null;
     }
 
     @Override

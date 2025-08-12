@@ -44,6 +44,8 @@ public class NewsPostServiceImpl implements NewsPostService {
 	@Autowired
 	private NewPostMapper newPostMapper;
 
+	@Autowired
+	private PostCommentMapper postCommentMapper;
 	/**
 	 * 뉴스 게시글 검색어 설정 후 조회 API 전체(검색어 설정을 안 했을 경우) 내용으로 검색 제목으로 검색 내용+전체로 검색
 	 *
@@ -100,9 +102,17 @@ public class NewsPostServiceImpl implements NewsPostService {
 		// newsPost -> NewsPostResponseDto 변환
 		NewsPostResponseDto newsPostDto = newPostMapper.toDto(newsPost);
 
+		List<PostComment> comments = postCommentRepository
+				.findByTargetIdAndTargetTypeOrderByPostCommentIdDesc(newsPost.getNewsPostId(), TargetType.NEWS);
+		// comments -> CommentResponseDto 변환
+		List<PostCommentResponseDto> commentDtos = postCommentMapper.toDtoList(comments);
+
 		// postLike 도 같은 방식으로 조회
 		// postLike -> PostLikeResponseDto 변환
 		// NewsPostResponseDto.setPostLikes(comments);
+
+		// DTO에 댓글 리스트 세팅
+		newsPostDto.setPostCommentList(commentDtos);
 
 		return newsPostDto;
 	}

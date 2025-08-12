@@ -1,5 +1,6 @@
 package kh.devspaceapi.external.api;
 
+import kh.devspaceapi.external.news.NaverNewsApiProperty;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +21,6 @@ public class NewsNewsApiClient {
      * 네이버 뉴스 API를 호출하여 뉴스 목록 JSON 문자열을 반환합니다.
      *
      * @param query 검색어
-     * @param naverApiProperty API 인증 정보
      * @return JSON 문자열
      */
     public String fetchNews(String query) {

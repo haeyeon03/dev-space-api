@@ -2,8 +2,6 @@ package kh.devspaceapi.service.impl;
 
 import java.util.List;
 
-import kh.devspaceapi.model.mapper.NewPostMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,51 +16,54 @@ import kh.devspaceapi.comm.exception.ErrorCode;
 import kh.devspaceapi.comm.response.PageResponse;
 import kh.devspaceapi.model.dto.newsPost.NewsPostRequestDto;
 import kh.devspaceapi.model.dto.newsPost.NewsPostResponseDto;
+import kh.devspaceapi.model.dto.postComment.PostCommentResponseDto;
 import kh.devspaceapi.model.entity.NewsPost;
 import kh.devspaceapi.model.entity.PostComment;
 import kh.devspaceapi.model.entity.enums.TargetType;
+import kh.devspaceapi.model.mapper.NewPostMapper;
+import kh.devspaceapi.model.mapper.PostCommentMapper;
 import kh.devspaceapi.repository.NewsPostRepository;
 import kh.devspaceapi.repository.PostCommentRepository;
 import kh.devspaceapi.service.NewsPostService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class NewsPostServiceImpl implements NewsPostService {
-	@Autowired
-	private NewsPostRepository newsPostRepository;
-
-	@Autowired
-	private PostCommentRepository postCommentRepository;
-
-	@Autowired
-	private NewPostMapper newPostMapper;
+	private final NewsPostRepository newsPostRepository;
+	private final PostCommentRepository postCommentRepository;
+	private final NewPostMapper newPostMapper;
+	private final PostCommentMapper postCommentMapper;
 
 	/**
 	 * 지정한 뉴스 게시글 ID에 해당하는 뉴스 게시글과 관련된 댓글, 좋아요 정보를 조회
 	 *
 	 * @param newsPostId 조회할 뉴스 게시글의 고유 ID
-	 * @return NewsPostResponseDto 뉴스 게시글, 댓글 리스트, 좋아요 리스트를 포함한 응답 DTO
-	 * @throws EntityNotFoundException 해당 ID의 뉴스 게시글이 없을 경우 발생
+	 * @return NewsPostResponseDto 뉴스 게시글 정보와 댓글 리스트, 좋아요 리스트를 포함한 응답 DTO 객체
+	 * @throws BusinessException 해당 ID의 뉴스 게시글이 없거나 비활성화된 경우 발생
 	 */
 	@Override
 	public NewsPostResponseDto getNewsPostById(Long newsPostId) {
-		NewsPost newsPost = newsPostRepository.findById(newsPostId)
+		NewsPost newsPost = newsPostRepository.findByNewsPostIdAndActiveTrue(newsPostId)
 				.orElseThrow(() -> new BusinessException(ErrorCode.NO_EXIST_NEWS_POST));
 		// newsPost -> NewsPostResponseDto 변환
+		NewsPostResponseDto newsPostDto = newPostMapper.toDto(newsPost);
 
 		List<PostComment> comments = postCommentRepository
 				.findByTargetIdAndTargetTypeOrderByPostCommentIdDesc(newsPost.getNewsPostId(), TargetType.NEWS);
 		// comments -> CommentResponseDto 변환
+		List<PostCommentResponseDto> commentDtos = postCommentMapper.toDtoList(comments);
 
 		// postLike 도 같은 방식으로 조회
 		// postLike -> PostLikeResponseDto 변환
+		// NewsPostResponseDto.setPostLikes(comments);
 
-//        NewsPostResponseDto.setComments(comments);
-//        NewsPostResponseDto.setPostLikes(comments);
+		// DTO에 댓글 리스트 세팅
+		newsPostDto.setPostCommentList(commentDtos);
 
-//        return NewsPostResponseDto;
-		return null;
+		return newsPostDto;
 	}
 
 	/**
@@ -93,7 +94,8 @@ public class NewsPostServiceImpl implements NewsPostService {
 			newsPostList = newsPostRepository.findAllByTitleContainingAndActiveTrue(title, pageable);
 			// 제목 + 내용 검색
 		} else if ((title != null && !title.isBlank()) && (content != null && !content.isBlank())) {
-			newsPostList = newsPostRepository.findAllByTitleContainingAndContentContainingAndActiveTrue(title, content, pageable);
+			newsPostList = newsPostRepository.findAllByTitleContainingAndContentContainingAndActiveTrue(title, content,
+					pageable);
 		} else {
 			// 전체 검색
 			newsPostList = newsPostRepository.findAllByActiveTrue(pageable);

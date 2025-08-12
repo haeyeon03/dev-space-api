@@ -28,10 +28,11 @@ public class NewsPostController {
 	/**
 	 * 뉴스 게시글 단건 조회 API
 	 *
-	 * 특정 ID(newsPostId)를 가진 뉴스 게시글을 조회
+	 * 요청받은 특정 뉴스 게시글 ID에 해당하는 게시글 정보를 조회하고,
+	 * 해당 게시글에 달린 댓글 리스트도 함께 반환
 	 *
-	 * @param newsPostId 조회할 뉴스 게시글의 ID (Path Variable)
-	 * @return ResponseEntity<NewsPostResponseDto> 조회된 뉴스 게시글 데이터
+	 * @param newsPostId 조회할 뉴스 게시글의 고유 ID
+	 * @return ResponseEntity<NewsPostResponseDto> 뉴스 게시글 정보와 댓글 목록이 포함된 응답 객체를 반환
 	 */
 	@GetMapping("/{newsPostId}")
 	public ResponseEntity<NewsPostResponseDto> getNewsPostById(@PathVariable Long newsPostId) {
@@ -40,12 +41,12 @@ public class NewsPostController {
 	}
 
 	/**
-	 * 뉴스 게시글 상세 조회 API
+	 * 뉴스 게시글 단건 댓글 조회 API
 	 *
-	 * 특정 ID(newsPostId)를 가진 뉴스 게시글을 조회
+	 * 특정 ID(newsPostId)를 가진 뉴스 게시글의 댓글 조회
 	 *
-	 * @param newsPostId 조회할 뉴스 게시글의 ID (Path Variable)
-	 * @return ResponseEntity<NewsPostResponseDto> 조회된 뉴스 게시글 데이터
+	 * @param 
+	 * @return 
 	 */
 //    @GetMapping("/{newsPostId}/comments")
 //    public ResponseEntity<List<CommentResponseDto>> getCommentsByNewsPostId(@PathVariable Long newsPostId) {

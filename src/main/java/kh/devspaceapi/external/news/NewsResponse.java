@@ -10,7 +10,5 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class NewsResponse {
-    private String status;
-    private int totalResults;
-    private List<Article> articles;
+
 }

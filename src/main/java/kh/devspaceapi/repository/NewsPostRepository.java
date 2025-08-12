@@ -14,4 +14,5 @@ public interface NewsPostRepository extends JpaRepository<NewsPost, Long> {
 
 	Page<NewsPost> findAllByTitleContainingAndContentContaining(String title, String content, Pageable pageable);
 
+	boolean existsByLink(String link);
 }

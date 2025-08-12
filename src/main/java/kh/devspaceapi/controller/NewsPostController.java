@@ -1,5 +1,9 @@
 package kh.devspaceapi.controller;
 
+import java.util.List;
+import java.util.Map;
+
+import kh.devspaceapi.comm.response.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -22,14 +26,14 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @Slf4j
 public class NewsPostController {
+
 	@Autowired
 	private NewsPostService newsPostService;
-
 	/**
 	 * 뉴스 게시글 검색어 설정 후 조회 API
-	 * 
+	 *
 	 * 전체(검색어 설정을 안 했을 경우) 내용으로 검색 제목으로 검색 내용+전체로 검색
-	 * 
+	 *
 	 * @ModelAttribute = 데이터 바인딩 + 모델 자동 등록, model.addAttribute()를 안 써도 됨 → 코드 깔끔
 	 */
 	@GetMapping("/")
@@ -40,16 +44,31 @@ public class NewsPostController {
 	/**
 	 * 뉴스 게시글 단건 조회 API
 	 *
-	 * 요청받은 특정 뉴스 게시글 ID에 해당하는 게시글 정보를 조회
+	 * 특정 ID(newsPostId)를 가진 뉴스 게시글을 조회
 	 *
-	 * @param newsPostId 조회할 뉴스 게시글의 고유 ID
-	 * @return ResponseEntity<NewsPostResponseDto> 뉴스 게시글 정보 반환
+	 * @param newsPostId 조회할 뉴스 게시글의 ID (Path Variable)
+	 * @return ResponseEntity<NewsPostResponseDto> 조회된 뉴스 게시글 데이터
 	 */
 	@GetMapping("/{newsPostId}")
 	public ResponseEntity<NewsPostResponseDto> getNewsPostById(@PathVariable Long newsPostId) {
 		NewsPostResponseDto newsPost = newsPostService.getNewsPostById(newsPostId);
 		return ResponseEntity.ok(newsPost);
 	}
+
+	/**
+	 * 뉴스 게시글 상세 조회 API
+	 *
+	 * 특정 ID(newsPostId)를 가진 뉴스 게시글을 조회
+	 *
+	 * @param newsPostId 조회할 뉴스 게시글의 ID (Path Variable)
+	 * @return ResponseEntity<NewsPostResponseDto> 조회된 뉴스 게시글 데이터
+	 */
+//    @GetMapping("/{newsPostId}/comments")
+//    public ResponseEntity<List<CommentResponseDto>> getCommentsByNewsPostId(@PathVariable Long newsPostId) {
+//        List<CommentResponseDto> comments = commentService.getCommentsByNewsPostId(newsPostId);
+//        return ResponseEntity.ok(comments);
+//    }
+
 
 	/**
 	 * 뉴스 게시글 댓글 목록 조회 API
@@ -65,10 +84,10 @@ public class NewsPostController {
 	    @PathVariable Long newsPostId,
 	    PostCommentRequestDto request
 	) {
-	    
+
 
 	    Page<PostCommentResponseDto> comments = newsPostService.getCommentsByNewsPostId(newsPostId, request);
-	    
+
 	    return ResponseEntity.ok(comments);
 	}
 

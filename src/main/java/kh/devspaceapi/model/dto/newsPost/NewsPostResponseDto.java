@@ -3,6 +3,8 @@ package kh.devspaceapi.model.dto.newsPost;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import kh.devspaceapi.external.api.dto.NaverNewsApiItem;
+import kh.devspaceapi.model.dto.postComment.PostCommentResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,10 +16,13 @@ import lombok.Setter;
 @AllArgsConstructor
 public class NewsPostResponseDto {
     private Long newsPostId;
-    private String lastBuildDate;
-    private int total;
-    private int start;
-    private int display;
-    private List<NewsItem> items;
+    private String title;
+    private String content;
+    private LocalDateTime updatedAt;
+    private LocalDateTime createdAt;
+    private String url;
+    private String imageUrl;
+    private LocalDateTime pubDate;
 
-}	
+    private List<PostCommentResponseDto> postCommentList;
+}

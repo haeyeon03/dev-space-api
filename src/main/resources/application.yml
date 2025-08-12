@@ -25,7 +25,32 @@ api:
     uri: /v1/search/news.json
     client-id: gMvuy5t65gjpfim29RXR
     client-secret: ${CLIENT_SECRET} # 환경변수로 관리
+    display: 100
+    keywords:
+      - "IT 통신"
+      - "AI"
+      - "인공지능"
+      - "머신러닝"
+      - "딥러닝"
+      - "IoT"
+      - "ICT"
+      - "네트워크"
+      - "IT 개발자"
+      - "IT 기업"
+      - "클라우드 컴퓨팅"
+      - "빅데이터"
+      - "5G"
+      - "자율주행"
+      - "블록체인"
+      - "사이버 보안"
+      - "스마트 시티"
+      - "컴퓨터 비전"
+      - "자연어 처리"
+      - "API 개발"
 
+logging:
+  level:
+    org.hibernate.SQL: OFF
 # H2 for Dev
 #  datasource:
 #    url: jdbc:h2:mem:testdb

@@ -1,10 +1,6 @@
-package kh.devspaceapi.external.news;
+package kh.devspaceapi.external.api;
 
-import org.springframework.web.client.RestTemplate;
-
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
@@ -12,10 +8,13 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Component
-public class NewsApiClient {
+@RequiredArgsConstructor
+public class NewsNewsApiClient {
+    private final NaverNewsApiProperty props;
 
     /**
      * 네이버 뉴스 API를 호출하여 뉴스 목록 JSON 문자열을 반환합니다.
@@ -24,24 +23,15 @@ public class NewsApiClient {
      * @param naverApiProperty API 인증 정보
      * @return JSON 문자열
      */
-    public String fetchNews(String query, NaverApiProperty naverApiProperty) {
-        try {
-            String encodedQuery = URLEncoder.encode(query, "UTF-8");
-            String apiURL = "https://openapi.naver.com/v1/search/news.json?query=" + encodedQuery;
+    public String fetchNews(String query) {
+        String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
+        String url = props.getHost() + props.getUri() + "?query=" + encodedQuery + "&display" + props.getDisplay();
 
-            System.out.println("Client ID: " + naverApiProperty.getClientId());
-            System.out.println("Client Secret: " + naverApiProperty.getClientSecret());
-
-            Map<String, String> requestHeaders = Map.of(
-                    "X-Naver-Client-Id", naverApiProperty.getClientId(),
-                    "X-Naver-Client-Secret", naverApiProperty.getClientSecret()
-            );
-
-            return get(apiURL, requestHeaders);
-
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("검색어 인코딩 실패", e);
-        }
+        Map<String, String> requestHeaders = Map.of(
+                "X-Naver-Client-Id", props.getClientId(),
+                "X-Naver-Client-Secret", props.getClientSecret()
+        );
+        return get(url, requestHeaders);
     }
 
     /**

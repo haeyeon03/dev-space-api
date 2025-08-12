@@ -2,6 +2,8 @@ package kh.devspaceapi.service.impl;
 
 import java.util.List;
 
+import kh.devspaceapi.model.mapper.NewPostMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,15 +30,19 @@ import kh.devspaceapi.repository.PostCommentRepository;
 import kh.devspaceapi.service.NewsPostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class NewsPostServiceImpl implements NewsPostService {
-	private final NewsPostRepository newsPostRepository;
-	private final PostCommentRepository postCommentRepository;
-	private final NewPostMapper newPostMapper;
-	private final PostCommentMapper postCommentMapper;
+	@Autowired
+	private NewsPostRepository newsPostRepository;
+
+	@Autowired
+	private PostCommentRepository postCommentRepository;
+
+	@Autowired
+	private NewPostMapper newPostMapper;
 
 	/**
 	 * 뉴스 게시글 검색어 설정 후 조회 API 전체(검색어 설정을 안 했을 경우) 내용으로 검색 제목으로 검색 내용+전체로 검색

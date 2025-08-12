@@ -11,10 +11,10 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostCommentResponseDto {
-	private Long postCommentId;
-	private String content;
-	private Long targetId;
-	private TargetType targetType;
+    private Long postCommentId;
+    private String content;
+    private Long targetId;
+    private TargetType targetType;
 
-	private UsersResponseDto user;
+    private UsersResponseDto user;
 }

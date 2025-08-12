@@ -13,45 +13,45 @@ import kh.devspaceapi.model.entity.PostComment;
 @Component
 public class PostCommentMapper implements GenericMapper<PostCommentResponseDto, PostComment> {
 
-	private final UserMapper userMapper;
+    private final UserMapper userMapper;
 
-	public PostCommentMapper(UserMapper userMapper) {
-		this.userMapper = userMapper;
-	}
+    public PostCommentMapper(UserMapper userMapper) {
+        this.userMapper = userMapper;
+    }
 
-	@Override
-	public PostComment toEntity(PostCommentResponseDto dto) {
-		return null;
-	}
+    @Override
+    public PostComment toEntity(PostCommentResponseDto dto) {
+        return null;
+    }
 
-	@Override
-	public PostCommentResponseDto toDto(PostComment entity) {
-		PostCommentResponseDto dto = new PostCommentResponseDto();
+    @Override
+    public PostCommentResponseDto toDto(PostComment entity) {
+        PostCommentResponseDto dto = new PostCommentResponseDto();
 
-		dto.setPostCommentId(entity.getPostCommentId());
-		dto.setContent(entity.getContent());
-		dto.setTargetId(entity.getTargetId());
-		dto.setTargetType(entity.getTargetType());
+        dto.setPostCommentId(entity.getPostCommentId());
+        dto.setContent(entity.getContent());
+        dto.setTargetId(entity.getTargetId());
+        dto.setTargetType(entity.getTargetType());
 
-		if (entity.getUser() != null) {
-			UsersResponseDto userDto = userMapper.toDto(entity.getUser());
-			dto.setUser(userDto);
-		}
+        if (entity.getUser() != null) {
+            UsersResponseDto userDto = userMapper.toDto(entity.getUser());
+            dto.setUser(userDto);
+        }
 
-		return dto;
-	}
+        return dto;
+    }
 
-	@Override
-	public List<PostComment> toEntityList(List<PostCommentResponseDto> dtoList) {
-		return null;
-	}
+    @Override
+    public List<PostComment> toEntityList(List<PostCommentResponseDto> dtoList) {
+        return null;
+    }
 
-	@Override
-	public List<PostCommentResponseDto> toDtoList(List<PostComment> entityList) {
-		if (entityList == null)
-			return Collections.emptyList();
+    @Override
+    public List<PostCommentResponseDto> toDtoList(List<PostComment> entityList) {
+        if (entityList == null)
+            return Collections.emptyList();
 
-		return entityList.stream().map(this::toDto).collect(Collectors.toList());
-	}
+        return entityList.stream().map(this::toDto).collect(Collectors.toList());
+    }
 
 }

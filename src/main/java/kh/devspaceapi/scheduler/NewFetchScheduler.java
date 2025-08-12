@@ -1,105 +1,142 @@
 package kh.devspaceapi.scheduler;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kh.devspaceapi.external.news.NaverApiProperty;
-import kh.devspaceapi.external.news.NewsApiClient;
-import kh.devspaceapi.model.dto.newsPost.NewsItem;
-import kh.devspaceapi.model.dto.newsPost.NewsPostResponseDto;
+import kh.devspaceapi.external.api.NaverNewsApiProperty;
+import kh.devspaceapi.external.site.AiTimesNewsFetcher;
+import kh.devspaceapi.external.site.NaverNewsFetcher;
+import kh.devspaceapi.external.api.NewsNewsApiClient;
+import kh.devspaceapi.external.api.dto.ContentResult;
+import kh.devspaceapi.external.api.dto.NaverNewsApiResponseDto;
+import kh.devspaceapi.external.api.dto.NaverNewsApiItem;
+import kh.devspaceapi.external.selector.NewsSiteSelector;
 import kh.devspaceapi.model.entity.NewsPost;
 import kh.devspaceapi.repository.NewsPostRepository;
+
+import lombok.RequiredArgsConstructor;
+
+import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
+import java.util.ArrayList;
+import java.util.List;
 
-
+@Log4j2
 @Component
+@RequiredArgsConstructor
 public class NewFetchScheduler {
-
-    @Autowired
-    private NaverApiProperty naverApiProperty;
-
-    @Autowired
-    private NewsApiClient newsApiClient;
-
-    @Autowired
-    private NewsPostRepository newsPostRepository;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final NewsNewsApiClient newsNewsApiClient;
+    private final NewsPostRepository newsPostRepository;
+    private final NaverNewsFetcher naverNewsFetcher;
+    private final AiTimesNewsFetcher aiTimesNewsFetcher;
+    private final ObjectMapper objectMapper;
+    private final NaverNewsApiProperty props;
 
     /**
-     * 24시간 마다 네이버 뉴스 API에서 "tech" 뉴스 가져와 DB 저장
+     * 24시간 마다 네이버 뉴스 API에서 "IT" 뉴스 가져와 DB 저장
      */
-//    @Scheduled(fixedDelay = 10000)
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(fixedDelay = 1000000) // 24시간 간격 (ms)
     public void fetchDailyNews() {
-        try {
-            // API 호출
-            String responseBody = newsApiClient.fetchNews("IT", naverApiProperty);
+        log.info("[Scheduler] 뉴스 스케줄러 시작");
 
-            // JSON -> DTO 매핑
-            NewsPostResponseDto newsPostResponseDto =
-                    objectMapper.readValue(responseBody, NewsPostResponseDto.class);
+        for (String Keyword : props.getKeywords()) {
+            log.info("[Scheduler] Keyword: {}", Keyword);
+            String responseBody = newsNewsApiClient.fetchNews(Keyword);
 
-            DateTimeFormatter formatter =
-                    DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
+            NaverNewsApiResponseDto newsResponse;
+            try {
+                newsResponse = objectMapper.readValue(responseBody, NaverNewsApiResponseDto.class);
+            } catch (JsonProcessingException e) {
+                log.error("[Scheduler] 뉴스 API 응답 JSON 파싱 실패", e);
+                continue;
+            }
 
+            List<NewsPost> entityList = new ArrayList<>();
 
-                // 본문 가져오기 (네이버 뉴스 페이지 예시)
-                for (NewsItem item : newsPostResponseDto.getItems()) {
-
-                    // 중복 체크 (link 기준)
-                    if (newsPostRepository.existsByLink(item.getLink())) {
-                        continue;  // 이미 있으면 저장하지 않음
-                    }
-
-                    NewsPost post = new NewsPost();
-                    post.setTitle(item.getTitle());
-                    post.setOriginallink(item.getOriginallink());
-                    post.setLink(item.getLink());
-                    post.setDescription(item.getDescription());
-                    post.setCreatedAt(LocalDateTime.now());
-                    post.setUpdatedAt(LocalDateTime.now());
-                    post.setActive(true);
-
-                    Document doc = Jsoup.connect(item.getLink()).get();
-
-                    String combinedSelector = "div#newsct_article, div#articleBody, .news_body, .article-content, div.contents[itemprop=articleBody], div#article-view-content-div, div#newsEndContents, article#content";
-                    Element contentElement = doc.selectFirst(combinedSelector);
-
-                    if (contentElement != null) {
-                        // 불필요한 태그 제거
-                        contentElement.select("div[style*=text-align:center], script, iframe, noscript, .ad, .advertisement").remove();
-
-                        // 모든 텍스트 가져오기
-                        String content = contentElement.text().trim();
-
-                        post.setContent(content);
-                    }
-
-
-                // 대표 이미지 가져오기
-                String imageUrl = doc.select("meta[property=og:image]").attr("content");
-                post.setImageUrl(imageUrl);
-
-
-
-                // 날짜 변환
-                ZonedDateTime zonedDateTime = ZonedDateTime.parse(item.getPubDate(), formatter);
-                post.setPubDate(zonedDateTime.toLocalDateTime());
-
-                    newsPostRepository.save(post);
-
+            for (NaverNewsApiItem item : newsResponse.getItems()) {
+                if (!StringUtils.hasText(item.getLink())) {
+                    continue;
                 }
-        } catch (Exception e) {
-            e.printStackTrace(); // 운영에서는 logger.warn/error 로 변경 권장
+
+                try {
+                    if (item.getLink().contains(NewsSiteSelector.NAVER_SELECTOR.getDomain())) {
+                        Document doc = Jsoup.connect(item.getLink()).get();
+                        ContentResult contentResult = naverNewsFetcher.fetchContent(doc);
+                        if (contentResult == null || !StringUtils.hasText(contentResult.getContentText())) {
+                            continue;
+                        }
+
+                        NewsPost entity = buildNewsPost(item, contentResult);
+                        entityList.add(entity);
+                    } else if (item.getLink().contains(NewsSiteSelector.AI_TIMES_SELECTOR.getDomain())) {
+                        Document doc = Jsoup.connect(item.getLink()).get();
+                        ContentResult contentResult = aiTimesNewsFetcher.fetchContent(doc);
+                        if (contentResult == null || !StringUtils.hasText(contentResult.getContentText())) {
+                            continue;
+                        }
+
+                        NewsPost entity = buildNewsPost(item, contentResult);
+                        entityList.add(entity);
+                    }
+
+
+                } catch (Exception e) {
+                    log.warn("[Scheduler] 본문 크롤링 실패 URL: {}", item.getLink(), e);
+                }
+            }
+
+            if (entityList.isEmpty()) {
+                log.info("[Scheduler] 신규 수집 뉴스 없음");
+                continue;
+            }
+
+            // DB 저장 (업데이트 또는 신규 삽입)
+            for (NewsPost entity : entityList) {
+                try {
+                    upsertNewsPost(entity);
+                } catch (Exception e) {
+                    log.error("[Scheduler] 뉴스 저장 실패. URL: {}", entity.getUrl(), e);
+                }
+            }
+        }
+        log.info("[Scheduler] 뉴스 스케줄러 종료");
+    }
+
+    private NewsPost buildNewsPost(NaverNewsApiItem item, ContentResult contentResult) {
+        NewsPost entity = new NewsPost();
+        entity.setTitle(item.getTitle());
+        entity.setContent(contentResult.getContentText());
+        entity.setUrl(item.getLink());
+
+        if (contentResult.getImageUrls() != null && !contentResult.getImageUrls().isEmpty()) {
+            entity.setImageUrl(contentResult.getImageUrls().get(0));
+        } else {
+            entity.setImageUrl(null);
+        }
+
+        entity.setPubDate(item.getPubDate());
+        return entity;
+    }
+
+    private void upsertNewsPost(NewsPost entity) {
+        NewsPost existing = newsPostRepository.findByUrl(entity.getUrl());
+
+        if (existing != null) {
+            // 기존 엔티티 업데이트할 필드들
+            existing.setTitle(entity.getTitle());
+            existing.setContent(entity.getContent());
+            existing.setImageUrl(entity.getImageUrl());
+            existing.setPubDate(entity.getPubDate());
+
+            newsPostRepository.save(existing);
+            log.info("뉴스 업데이트: {}", entity.getUrl());
+        } else {
+            newsPostRepository.save(entity);
+            log.info("뉴스 신규 삽입: {}", entity.getUrl());
         }
     }
 }

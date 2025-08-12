@@ -9,4 +9,6 @@ import kh.devspaceapi.model.entity.enums.TargetType;
 
 public interface PostCommentRepository extends JpaRepository<PostComment, Long>  {
     List<PostComment> findByTargetIdAndTargetTypeOrderByPostCommentIdDesc(Long targetId, TargetType targetType);
+
+    List<PostComment> findByTargetIdAndTargetType(Long newsPostId, TargetType targetType);
 }

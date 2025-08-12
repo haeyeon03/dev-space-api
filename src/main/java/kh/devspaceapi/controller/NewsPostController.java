@@ -23,8 +23,20 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @Slf4j
 public class NewsPostController {
+
 	@Autowired
 	private NewsPostService newsPostService;
+	/**
+	 * 뉴스 게시글 검색어 설정 후 조회 API
+	 *
+	 * 전체(검색어 설정을 안 했을 경우) 내용으로 검색 제목으로 검색 내용+전체로 검색
+	 *
+	 * @ModelAttribute = 데이터 바인딩 + 모델 자동 등록, model.addAttribute()를 안 써도 됨 → 코드 깔끔
+	 */
+	@GetMapping("/")
+	public ResponseEntity<PageResponse<NewsPostResponseDto>> getNewsPost(@ModelAttribute NewsPostRequestDto request) {
+		return ResponseEntity.ok(newsPostService.getNewsPost(request));
+	}
 
 	/**
 	 * 뉴스 게시글 단건 조회 API
@@ -54,17 +66,6 @@ public class NewsPostController {
 //        return ResponseEntity.ok(comments);
 //    }
 
-	/**
-	 * 뉴스 게시글 검색어 설정 후 조회 API
-	 * 
-	 * 전체(검색어 설정을 안 했을 경우) 내용으로 검색 제목으로 검색 내용+전체로 검색
-	 * 
-	 * @ModelAttribute = 데이터 바인딩 + 모델 자동 등록, model.addAttribute()를 안 써도 됨 → 코드 깔끔
-	 */
-	@GetMapping("/")
-	public ResponseEntity<PageResponse<NewsPostResponseDto>> getNewsPost(@ModelAttribute NewsPostRequestDto request) {
-		return ResponseEntity.ok(newsPostService.getNewsPost(request));
-	}
 
 	/**
 	 * 

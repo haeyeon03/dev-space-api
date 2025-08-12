@@ -2,7 +2,9 @@ package kh.devspaceapi.service.impl;
 
 import java.util.List;
 
+import kh.devspaceapi.model.dto.postComment.PostCommentResponseDto;
 import kh.devspaceapi.model.mapper.NewPostMapper;
+import kh.devspaceapi.model.mapper.PostCommentMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -24,6 +26,7 @@ import kh.devspaceapi.repository.NewsPostRepository;
 import kh.devspaceapi.repository.PostCommentRepository;
 import kh.devspaceapi.service.NewsPostService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -37,32 +40,8 @@ public class NewsPostServiceImpl implements NewsPostService {
 	@Autowired
 	private NewPostMapper newPostMapper;
 
-	/**
-	 * 지정한 뉴스 게시글 ID에 해당하는 뉴스 게시글과 관련된 댓글, 좋아요 정보를 조회
-	 *
-	 * @param newsPostId 조회할 뉴스 게시글의 고유 ID
-	 * @return NewsPostResponseDto 뉴스 게시글, 댓글 리스트, 좋아요 리스트를 포함한 응답 DTO
-	 * @throws EntityNotFoundException 해당 ID의 뉴스 게시글이 없을 경우 발생
-	 */
-	@Override
-	public NewsPostResponseDto getNewsPostById(Long newsPostId) {
-		NewsPost newsPost = newsPostRepository.findById(newsPostId)
-				.orElseThrow(() -> new BusinessException(ErrorCode.NO_EXIST_NEWS_POST));
-		// newsPost -> NewsPostResponseDto 변환
-
-		List<PostComment> comments = postCommentRepository
-				.findByTargetIdAndTargetTypeOrderByPostCommentIdDesc(newsPost.getNewsPostId(), TargetType.NEWS);
-		// comments -> CommentResponseDto 변환
-
-		// postLike 도 같은 방식으로 조회
-		// postLike -> PostLikeResponseDto 변환
-
-//        NewsPostResponseDto.setComments(comments);
-//        NewsPostResponseDto.setPostLikes(comments);
-
-//        return NewsPostResponseDto;
-		return null;
-	}
+	@Autowired
+	private PostCommentMapper postCommentMapper;
 
 	/**
 	 * 뉴스 게시글 검색어 설정 후 조회 API
@@ -107,9 +86,89 @@ public class NewsPostServiceImpl implements NewsPostService {
 	}
 
 
+	/**
+	 * 지정한 뉴스 게시글 ID에 해당하는 뉴스 게시글과 관련된 댓글, 좋아요 정보를 조회
+	 *
+	 * @param newsPostId 조회할 뉴스 게시글의 고유 ID
+	 * @return NewsPostResponseDto 뉴스 게시글 정보와 댓글 리스트, 좋아요 리스트를 포함한 응답 DTO 객체
+	 * @throws BusinessException 해당 ID의 뉴스 게시글이 없거나 비활성화된 경우 발생
+	 */
 	@Override
+	public NewsPostResponseDto getNewsPostById(Long newsPostId) {
+		NewsPost newsPost = newsPostRepository.findByNewsPostIdAndActiveTrue(newsPostId)
+				.orElseThrow(() -> new BusinessException(ErrorCode.NO_EXIST_NEWS_POST));
+		// newsPost -> NewsPostResponseDto 변환
+		NewsPostResponseDto newsPostDto = newPostMapper.toDto(newsPost);
+
+		List<PostComment> comments = postCommentRepository
+				.findByTargetIdAndTargetTypeOrderByPostCommentIdDesc(newsPost.getNewsPostId(), TargetType.NEWS);
+		// comments -> CommentResponseDto 변환
+		List<PostCommentResponseDto> commentDtos = postCommentMapper.toDtoList(comments);
+
+		// postLike 도 같은 방식으로 조회
+		// postLike -> PostLikeResponseDto 변환
+		// NewsPostResponseDto.setPostLikes(comments);
+
+		// DTO에 댓글 리스트 세팅
+		newsPostDto.setPostCommentList(commentDtos);
+		return newsPostDto;
+	}
+
+	/**
+	 * 뉴스 게시글 및 해당 게시글에 달린 모든 댓글을 논리적으로 삭제 처리 (물리 삭제(DELETE) 대신 active 필드를 false로
+	 * 변경)
+	 *
+	 * @param newsPostId 조회할 뉴스 게시글의 고유 ID
+	 * @return 삭제 성공 시 1L, 실패 시 0L
+	 * @throws IllegalArgumentException 해당 ID의 뉴스 게시글이 존재하지 않을 경우 발생
+	 */
+	@Override
+	@Transactional
 	public Long deleteNewsPost(Long newsPostId) {
+		try {
+			// 1) 뉴스 게시글 존재 여부 확인
+			// 존재하지 않으면 IllegalArgumentException 발생
+			NewsPost newsPost = newsPostRepository.findById(newsPostId)
+					.orElseThrow(() -> new IllegalArgumentException("해당 뉴스 게시글이 존재하지 않습니다."));
+
+			// 2) 해당 게시글에 달린 모든 댓글 조회 (TargetType.NEWS)
+			// 댓글도 논리 삭제(active=false)
+			List<PostComment> comments = postCommentRepository.findByTargetIdAndTargetType(newsPostId, TargetType.NEWS);
+			for (PostComment comment : comments) {
+				comment.setActive(false);
+			}
+			postCommentRepository.saveAll(comments);
+
+			// 3) 뉴스 게시글 논리 삭제 처리
+			newsPost.setActive(false);
+			newsPostRepository.save(newsPost);
+
+			return 1L; // 성공 시 1 반환
+
+		} catch (DataIntegrityViolationException e) {
+			// DB 제약 조건 위반 시 (예: FK 제약, null 값 불가 등)
+		} catch (IllegalArgumentException e) {
+			// 존재하지 않는 뉴스 게시글 ID일 경우
+			throw e; // 이 경우는 0L 반환 대신 예외를 컨트롤러로 던짐
+		} catch (Exception e) {
+			// 알 수 없는 예외 처리
+		}
+
+		// 예외가 발생해서 try 블록을 정상적으로 마치지 못한 경우 0 반환 (실패)
 		return 0L;
 	}
+
+//	@Override
+//	public Page<PostCommentResponseDto> getCommentsByNewsPostId(Long newsPostId, PostCommentRequestDto request) {
+//		List<PostComment> comments = postCommentRepository
+//				.findByTargetIdAndTargetTypeOrderByPostCommentIdDesc(newsPostId, TargetType.NEWS);
+//
+//		// comments -> CommentResponseDto 변환
+//		List<PostCommentResponseDto> commentDtos = postCommentMapper.toDtoList(comments);
+//
+//		newsPostDto.setPostCommentList(commentDtos);
+//
+//		return null;
+//	}
 
 }

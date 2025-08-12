@@ -21,7 +21,4 @@ public class PostImage extends BaseEntity {
     private Long targetId; // FK (NewsPostId or BoardPostId)
     @Enumerated(EnumType.STRING)
     private TargetType targetType;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "USER_ID")
-    private Users user;
 }

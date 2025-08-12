@@ -1,18 +1,15 @@
 package kh.devspaceapi.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import kh.devspaceapi.comm.response.PageResponse;
 import kh.devspaceapi.model.dto.newsPost.NewsPostRequestDto;
 import kh.devspaceapi.model.dto.newsPost.NewsPostResponseDto;
+import kh.devspaceapi.model.dto.postComment.PostCommentRequestDto;
+import kh.devspaceapi.model.dto.postComment.PostCommentResponseDto;
 
 public interface NewsPostService {
-
-	/**
-	 * 지정된 뉴스 게시글 ID에 해당하는 뉴스 게시글 정보를 조회
-	 *
-	 * @param newsPostId 조회할 뉴스 게시글의 고유 ID
-	 * @return NewsPostResponseDto 뉴스 게시글의 상세 정보를 담은 DTO 객체
-	 */
-	NewsPostResponseDto getNewsPostById(Long newsPostId);
 
 	/**
 	 * 뉴스 게시글 검색 조건에 따라 페이지 단위로 뉴스 게시글 목록을 조회
@@ -23,10 +20,21 @@ public interface NewsPostService {
 	PageResponse<NewsPostResponseDto> getNewsPost(NewsPostRequestDto request);
 
 	/**
+	 * 지정된 뉴스 게시글 ID에 해당하는 뉴스 게시글 정보를 조회
+	 *
+	 * @param newsPostId 조회할 뉴스 게시글의 고유 ID
+	 * @return NewsPostResponseDto 뉴스 게시글의 상세 정보를 담은 DTO 객체
+	 */
+	NewsPostResponseDto getNewsPostById(Long newsPostId);
+
+
+	/**
 	 * 지정된 뉴스 게시글 ID에 해당하는 뉴스 게시글을 삭제
 	 *
 	 * @param newsPostId 삭제할 뉴스 게시글의 고유 ID
 	 */
 	public Long deleteNewsPost(Long newsPostId);
+
+	Page<PostCommentResponseDto> getCommentsByNewsPostId(Long newsPostId, PostCommentRequestDto request);
 
 }

@@ -1,9 +1,7 @@
 package kh.devspaceapi.controller;
 
-import java.util.List;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 import kh.devspaceapi.comm.response.PageResponse;
 import kh.devspaceapi.model.dto.newsPost.NewsPostRequestDto;
 import kh.devspaceapi.model.dto.newsPost.NewsPostResponseDto;
+import kh.devspaceapi.model.dto.postComment.PostCommentRequestDto;
+import kh.devspaceapi.model.dto.postComment.PostCommentResponseDto;
 import kh.devspaceapi.service.NewsPostService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,35 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 public class NewsPostController {
 	@Autowired
 	private NewsPostService newsPostService;
-
-	/**
-	 * 뉴스 게시글 단건 조회 API
-	 *
-	 * 요청받은 특정 뉴스 게시글 ID에 해당하는 게시글 정보를 조회하고,
-	 * 해당 게시글에 달린 댓글 리스트도 함께 반환
-	 *
-	 * @param newsPostId 조회할 뉴스 게시글의 고유 ID
-	 * @return ResponseEntity<NewsPostResponseDto> 뉴스 게시글 정보와 댓글 목록이 포함된 응답 객체를 반환
-	 */
-	@GetMapping("/{newsPostId}")
-	public ResponseEntity<NewsPostResponseDto> getNewsPostById(@PathVariable Long newsPostId) {
-		NewsPostResponseDto newsPost = newsPostService.getNewsPostById(newsPostId);
-		return ResponseEntity.ok(newsPost);
-	}
-
-	/**
-	 * 뉴스 게시글 단건 댓글 조회 API
-	 *
-	 * 특정 ID(newsPostId)를 가진 뉴스 게시글의 댓글 조회
-	 *
-	 * @param 
-	 * @return 
-	 */
-//    @GetMapping("/{newsPostId}/comments")
-//    public ResponseEntity<List<CommentResponseDto>> getCommentsByNewsPostId(@PathVariable Long newsPostId) {
-//        List<CommentResponseDto> comments = commentService.getCommentsByNewsPostId(newsPostId);
-//        return ResponseEntity.ok(comments);
-//    }
 
 	/**
 	 * 뉴스 게시글 검색어 설정 후 조회 API
@@ -65,6 +36,51 @@ public class NewsPostController {
 	public ResponseEntity<PageResponse<NewsPostResponseDto>> getNewsPost(@ModelAttribute NewsPostRequestDto request) {
 		return ResponseEntity.ok(newsPostService.getNewsPost(request));
 	}
+
+	/**
+	 * 뉴스 게시글 단건 조회 API
+	 *
+	 * 요청받은 특정 뉴스 게시글 ID에 해당하는 게시글 정보를 조회
+	 *
+	 * @param newsPostId 조회할 뉴스 게시글의 고유 ID
+	 * @return ResponseEntity<NewsPostResponseDto> 뉴스 게시글 정보 반환
+	 */
+	@GetMapping("/{newsPostId}")
+	public ResponseEntity<NewsPostResponseDto> getNewsPostById(@PathVariable Long newsPostId) {
+		NewsPostResponseDto newsPost = newsPostService.getNewsPostById(newsPostId);
+		return ResponseEntity.ok(newsPost);
+	}
+
+	/**
+	 * 뉴스 게시글 댓글 목록 조회 API
+	 *
+	 * 특정 뉴스 게시글(newsPostId)에 달린 댓글을 페이지 단위로 조회
+	 *
+	 * @param newsPostId 조회할 뉴스 게시글 ID
+	 * @param pageable   페이지 번호(page), 페이지 크기(size), 정렬 기준(sort) 등의 정보
+	 * @return 페이징 처리된 댓글 목록
+	 */
+	@GetMapping("/{newsPostId}/comments")
+	public ResponseEntity<Page<PostCommentResponseDto>> getCommentsByNewsPostId(
+	    @PathVariable Long newsPostId,
+	    PostCommentRequestDto request
+	) {
+	    
+
+	    Page<PostCommentResponseDto> comments = newsPostService.getCommentsByNewsPostId(newsPostId, request);
+	    
+	    return ResponseEntity.ok(comments);
+	}
+
+	/**
+	 * 뉴스 게시글 댓글 수정 API
+	 *
+	 * 특정 ID(newsPostId)를 가진 뉴스 게시글의 댓글 조회
+	 *
+	 * @param
+	 * @return
+	 */
+//	@PutMapping("/{newsPostId}/comments")
 
 	/**
 	 * 뉴스 게시글 조회 후 삭제

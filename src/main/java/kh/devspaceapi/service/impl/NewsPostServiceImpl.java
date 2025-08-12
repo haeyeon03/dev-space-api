@@ -16,6 +16,7 @@ import kh.devspaceapi.comm.exception.ErrorCode;
 import kh.devspaceapi.comm.response.PageResponse;
 import kh.devspaceapi.model.dto.newsPost.NewsPostRequestDto;
 import kh.devspaceapi.model.dto.newsPost.NewsPostResponseDto;
+import kh.devspaceapi.model.dto.postComment.PostCommentRequestDto;
 import kh.devspaceapi.model.dto.postComment.PostCommentResponseDto;
 import kh.devspaceapi.model.entity.NewsPost;
 import kh.devspaceapi.model.entity.PostComment;
@@ -36,35 +37,6 @@ public class NewsPostServiceImpl implements NewsPostService {
 	private final PostCommentRepository postCommentRepository;
 	private final NewPostMapper newPostMapper;
 	private final PostCommentMapper postCommentMapper;
-
-	/**
-	 * 지정한 뉴스 게시글 ID에 해당하는 뉴스 게시글과 관련된 댓글, 좋아요 정보를 조회
-	 *
-	 * @param newsPostId 조회할 뉴스 게시글의 고유 ID
-	 * @return NewsPostResponseDto 뉴스 게시글 정보와 댓글 리스트, 좋아요 리스트를 포함한 응답 DTO 객체
-	 * @throws BusinessException 해당 ID의 뉴스 게시글이 없거나 비활성화된 경우 발생
-	 */
-	@Override
-	public NewsPostResponseDto getNewsPostById(Long newsPostId) {
-		NewsPost newsPost = newsPostRepository.findByNewsPostIdAndActiveTrue(newsPostId)
-				.orElseThrow(() -> new BusinessException(ErrorCode.NO_EXIST_NEWS_POST));
-		// newsPost -> NewsPostResponseDto 변환
-		NewsPostResponseDto newsPostDto = newPostMapper.toDto(newsPost);
-
-		List<PostComment> comments = postCommentRepository
-				.findByTargetIdAndTargetTypeOrderByPostCommentIdDesc(newsPost.getNewsPostId(), TargetType.NEWS);
-		// comments -> CommentResponseDto 변환
-		List<PostCommentResponseDto> commentDtos = postCommentMapper.toDtoList(comments);
-
-		// postLike 도 같은 방식으로 조회
-		// postLike -> PostLikeResponseDto 변환
-		// NewsPostResponseDto.setPostLikes(comments);
-
-		// DTO에 댓글 리스트 세팅
-		newsPostDto.setPostCommentList(commentDtos);
-
-		return newsPostDto;
-	}
 
 	/**
 	 * 뉴스 게시글 검색어 설정 후 조회 API 전체(검색어 설정을 안 했을 경우) 내용으로 검색 제목으로 검색 내용+전체로 검색
@@ -109,6 +81,27 @@ public class NewsPostServiceImpl implements NewsPostService {
 	}
 
 	/**
+	 * 지정한 뉴스 게시글 ID에 해당하는 뉴스 게시글과 관련된 댓글, 좋아요 정보를 조회
+	 *
+	 * @param newsPostId 조회할 뉴스 게시글의 고유 ID
+	 * @return NewsPostResponseDto 뉴스 게시글 정보와 댓글 리스트, 좋아요 리스트를 포함한 응답 DTO 객체
+	 * @throws BusinessException 해당 ID의 뉴스 게시글이 없거나 비활성화된 경우 발생
+	 */
+	@Override
+	public NewsPostResponseDto getNewsPostById(Long newsPostId) {
+		NewsPost newsPost = newsPostRepository.findByNewsPostIdAndActiveTrue(newsPostId)
+				.orElseThrow(() -> new BusinessException(ErrorCode.NO_EXIST_NEWS_POST));
+		// newsPost -> NewsPostResponseDto 변환
+		NewsPostResponseDto newsPostDto = newPostMapper.toDto(newsPost);
+
+		// postLike 도 같은 방식으로 조회
+		// postLike -> PostLikeResponseDto 변환
+		// NewsPostResponseDto.setPostLikes(comments);
+
+		return newsPostDto;
+	}
+
+	/**
 	 * 뉴스 게시글 및 해당 게시글에 달린 모든 댓글을 논리적으로 삭제 처리 (물리 삭제(DELETE) 대신 active 필드를 false로
 	 * 변경)
 	 *
@@ -150,5 +143,18 @@ public class NewsPostServiceImpl implements NewsPostService {
 
 		// 예외가 발생해서 try 블록을 정상적으로 마치지 못한 경우 0 반환 (실패)
 		return 0L;
+	}
+
+	@Override
+	public Page<PostCommentResponseDto> getCommentsByNewsPostId(Long newsPostId, PostCommentRequestDto request) {
+		List<PostComment> comments = postCommentRepository
+				.findByTargetIdAndTargetTypeOrderByPostCommentIdDesc(newsPostId, TargetType.NEWS);
+
+		// comments -> CommentResponseDto 변환
+		List<PostCommentResponseDto> commentDtos = postCommentMapper.toDtoList(comments);
+
+//		newsPostDto.setPostCommentList(commentDtos);
+
+		return null;
 	}
 }

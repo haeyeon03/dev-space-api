@@ -2,6 +2,10 @@ package kh.devspaceapi.repository;
 
 import java.util.List;
 
+import javax.xml.stream.events.Comment;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,4 +18,5 @@ public interface PostCommentRepository extends JpaRepository<PostComment, Long> 
 
 	List<PostComment> findByTargetIdAndTargetType(Long targetId, TargetType targetType);
 
+	Page<PostComment> findByNewsPostId(Long newsPostId, Pageable pageable);
 }

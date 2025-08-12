@@ -1,5 +1,7 @@
 package kh.devspaceapi.model.dto.postComment;
 
+import java.util.List;
+
 import kh.devspaceapi.model.dto.users.UsersResponseDto;
 import kh.devspaceapi.model.entity.enums.TargetType;
 import lombok.*;

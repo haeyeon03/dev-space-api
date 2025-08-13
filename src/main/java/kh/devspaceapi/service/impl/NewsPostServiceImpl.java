@@ -119,11 +119,12 @@ public class NewsPostServiceImpl implements NewsPostService {
 		Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by("createdAt").descending());
 
 		// targetId와 targetType(뉴스 게시글) 기준으로 댓글을 페이징 조회
-		Page<PostComment> commentPage = postCommentRepository.findByTargetIdAndTargetType(newsPostId, TargetType.NEWS,
-				pageable);
+//		Page<PostComment> commentPage = postCommentRepository.findByTargetIdAndTargetType(newsPostId, TargetType.NEWS,
+//				pageable);
 
 		// 엔티티 → DTO 변환하여 반환
-		return commentPage.map(postCommentMapper::toDto);
+//		return commentPage.map(postCommentMapper::toDto);
+		return null;
 	}
 
 	/**

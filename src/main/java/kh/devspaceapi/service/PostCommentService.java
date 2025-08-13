@@ -8,7 +8,7 @@ import kh.devspaceapi.model.entity.enums.TargetType;
 
 public interface PostCommentService {
 
-	public PostCommentResponseDto create(Long targetId, TargetType targetType, String userId, String content);
+	public PostCommentResponseDto create(Long targetId, TargetType targetType, Long userId, String content);
 
 	public PostCommentResponseDto get(Long commentId);
 

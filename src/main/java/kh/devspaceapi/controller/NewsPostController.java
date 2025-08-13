@@ -131,6 +131,7 @@ public class NewsPostController {
 				requestDto.getTargetId(), requestDto.getContent());
 
 		return ResponseEntity.ok(created);
+
 	}
 
 	// 댓글 수정

@@ -29,13 +29,13 @@ public class PostCommentServiceImpl implements PostCommentService {
 
 	@Override
 	@Transactional
-	public PostCommentResponseDto create(Long targetId, TargetType targetType, String userId, String content) {
+	public PostCommentResponseDto create(Long targetId, TargetType targetType, Long userId, String content) {
 		// Users 참조는 PK만 세팅(프록시 없이도 JPA가 FK로 저장 가능)
 		Users userRef = null;
-		if (userId != null && !userId.isBlank()) {
-			userRef = new Users();
-			userRef.setUserId(userId);
-		}
+//		if (userId != null && !userId.isBlank()) {
+//			userRef = new Users();
+//			userRef.setUserId(userId);
+//		}
 
 		PostComment c = new PostComment();
 		c.setTargetId(targetId);

@@ -24,7 +24,7 @@ public class UserPenalty extends BaseEntity {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime reportedAt; // 신고가 접수된 시간
     private LocalDateTime effectiveAt; // 패널티 적용 시간
-    private long duration_sec; // 기간(Sec.)
+    private long durationSec; // 기간(Sec.)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "USER_ID")
     private Users user;

@@ -1,6 +1,7 @@
 package kh.devspaceapi.service;
 
 import kh.devspaceapi.model.dto.admin.stats.SummaryResponseDto;
+import kh.devspaceapi.model.dto.admin.stats.UserDetailResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.UserListResponseDto;
 
 import java.util.List;
@@ -18,6 +19,8 @@ public interface AdminService {
     GenderRatioResponseDto getGenderRatio();
     
     //관리자 유저 리스트 service
-//    Page<UserListResponseDto> getUserList(String searchType, String keyword, String role, Pageable pageable);
+    Page<UserListResponseDto> getUserList(String searchType, String keyword, String role, Pageable pageable);
+    
+    UserDetailResponseDto getUserDetail(String userId);
 
 }

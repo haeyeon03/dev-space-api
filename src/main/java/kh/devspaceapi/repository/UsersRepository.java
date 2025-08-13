@@ -1,6 +1,7 @@
 package kh.devspaceapi.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,4 +29,5 @@ public interface UsersRepository extends JpaRepository<Users, String> {
 			""")
 	Page<Users> searchUsers(@Param("searchType") String searchType, @Param("keyword") String keyword, @Param("role") String role, Pageable pageable);
 
+	Optional<Users> findByUserId(String userId);
 }

@@ -29,6 +29,7 @@ public class NewsPostController {
 
 	@Autowired
 	private NewsPostService newsPostService;
+
 	/**
 	 * 뉴스 게시글 검색어 설정 후 조회 API
 	 *
@@ -69,7 +70,6 @@ public class NewsPostController {
 //        return ResponseEntity.ok(comments);
 //    }
 
-
 	/**
 	 * 뉴스 게시글 댓글 목록 조회 API
 	 *
@@ -80,15 +80,12 @@ public class NewsPostController {
 	 * @return 페이징 처리된 댓글 목록
 	 */
 	@GetMapping("/{newsPostId}/comments")
-	public ResponseEntity<Page<PostCommentResponseDto>> getCommentsByNewsPostId(
-	    @PathVariable Long newsPostId,
-	    PostCommentRequestDto request
-	) {
+	public ResponseEntity<Page<PostCommentResponseDto>> getCommentsByNewsPostId(@PathVariable Long newsPostId,
+			PostCommentRequestDto request) {
 
+		Page<PostCommentResponseDto> comments = newsPostService.getCommentsByNewsPostId(newsPostId, request);
 
-	    Page<PostCommentResponseDto> comments = newsPostService.getCommentsByNewsPostId(newsPostId, request);
-
-	    return ResponseEntity.ok(comments);
+		return ResponseEntity.ok(comments);
 	}
 
 	/**

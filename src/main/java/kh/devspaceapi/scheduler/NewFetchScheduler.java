@@ -2,9 +2,9 @@ package kh.devspaceapi.scheduler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kh.devspaceapi.external.news.NaverNewsApiProperty;
 import kh.devspaceapi.external.site.AiTimesNewsFetcher;
 import kh.devspaceapi.external.site.NaverNewsFetcher;
+import kh.devspaceapi.external.api.NaverNewsApiProperty;
 import kh.devspaceapi.external.api.NewsNewsApiClient;
 import kh.devspaceapi.external.api.dto.ContentResult;
 import kh.devspaceapi.external.api.dto.NaverNewsApiResponseDto;

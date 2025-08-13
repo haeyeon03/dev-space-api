@@ -23,29 +23,24 @@ import kh.devspaceapi.model.dto.postComment.PostCommentResponseDto;
 import kh.devspaceapi.model.entity.NewsPost;
 import kh.devspaceapi.model.entity.PostComment;
 import kh.devspaceapi.model.entity.enums.TargetType;
-import kh.devspaceapi.model.mapper.NewPostMapper;
 import kh.devspaceapi.model.mapper.PostCommentMapper;
 import kh.devspaceapi.repository.NewsPostRepository;
 import kh.devspaceapi.repository.PostCommentRepository;
 import kh.devspaceapi.service.NewsPostService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 public class NewsPostServiceImpl implements NewsPostService {
 	@Autowired
 	private NewsPostRepository newsPostRepository;
-
 	@Autowired
 	private PostCommentRepository postCommentRepository;
-
 	@Autowired
 	private NewPostMapper newPostMapper;
-
 	@Autowired
 	private PostCommentMapper postCommentMapper;
+
 	/**
 	 * 뉴스 게시글 검색어 설정 후 조회 API 전체(검색어 설정을 안 했을 경우) 내용으로 검색 제목으로 검색 내용+전체로 검색
 	 *

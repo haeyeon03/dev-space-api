@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -14,5 +15,7 @@ public class NaverNewsApiResponseDto {
     private int total; // API 호출 결과 건수
     private int start;
     private int display;
-    private List<NaverNewsApiItem> items; // 실데이터
+    
+    
+    private List<NaverNewsApiItem> items = new ArrayList<>(); // 기본값으로 빈 리스트
 }

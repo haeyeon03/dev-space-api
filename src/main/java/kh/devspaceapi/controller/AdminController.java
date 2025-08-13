@@ -1,11 +1,13 @@
 package kh.devspaceapi.controller;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +19,7 @@ import kh.devspaceapi.model.dto.admin.stats.AgeGenderDistributionResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.DailyViewCountResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.GenderRatioResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.SummaryResponseDto;
+import kh.devspaceapi.model.dto.admin.stats.UserListResponseDto;
 import kh.devspaceapi.service.AdminService;
 import kh.devspaceapi.service.PostViewLogService;
 import lombok.RequiredArgsConstructor;
@@ -67,11 +70,10 @@ public class AdminController {
 	 */
 	@GetMapping("/stats/daily-views")
 	public ResponseEntity<List<DailyViewCountResponseDto>> getDailyViewCount(
-			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-		Timestamp startTimestamp = Timestamp.valueOf(startDate.atStartOfDay());
-		Timestamp endTimestamp = Timestamp.valueOf(endDate.atTime(23, 59, 59));
-		return ResponseEntity.ok(postViewLogService.getDailyViewCountBetween(startTimestamp, endTimestamp));
+			@RequestParam LocalDate startTs,
+			@RequestParam LocalDate endTsExclusive) {
+		
+		return ResponseEntity.ok(postViewLogService.getDailyViewCountBetween(startTs, endTsExclusive));
 	}
 
 	/*
@@ -86,4 +88,21 @@ public class AdminController {
 				endDate);
 		return ResponseEntity.ok(distribution);
 	}
+	
+	/**
+     * 회원 리스트 조회 (검색/역할필터/정지여부/페이징)
+     * searchType: name | nickname
+     * role: admin | user | banned
+     */
+    @GetMapping("/members")
+    public ResponseEntity<Page<UserListResponseDto>> getMembers(
+            @RequestParam(required = false) String searchType,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String role,
+            @PageableDefault(size = 10, sort = "userId", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return ResponseEntity.ok(
+        		adminService.getUserList(searchType, keyword, role, pageable)
+        );
+    }
 }

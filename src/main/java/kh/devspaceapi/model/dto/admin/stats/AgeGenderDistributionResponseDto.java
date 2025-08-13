@@ -13,7 +13,7 @@ import lombok.Setter;
 @Builder
 public class AgeGenderDistributionResponseDto {
 	
-	// 연령대별 그룹 ex) 10대, 20대...
+		// 연령대별 그룹 ex) 10대, 20대...
 		private String ageGroup;
 		// M, F
 	    private String gender;

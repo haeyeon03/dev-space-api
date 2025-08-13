@@ -2,8 +2,6 @@ package kh.devspaceapi.service.impl;
 
 import java.util.List;
 
-import kh.devspaceapi.model.mapper.NewPostMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,23 +21,22 @@ import kh.devspaceapi.model.dto.postComment.PostCommentResponseDto;
 import kh.devspaceapi.model.entity.NewsPost;
 import kh.devspaceapi.model.entity.PostComment;
 import kh.devspaceapi.model.entity.enums.TargetType;
+import kh.devspaceapi.model.mapper.NewPostMapper;
 import kh.devspaceapi.model.mapper.PostCommentMapper;
 import kh.devspaceapi.repository.NewsPostRepository;
 import kh.devspaceapi.repository.PostCommentRepository;
 import kh.devspaceapi.service.NewsPostService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class NewsPostServiceImpl implements NewsPostService {
-	@Autowired
-	private NewsPostRepository newsPostRepository;
-	@Autowired
-	private PostCommentRepository postCommentRepository;
-	@Autowired
-	private NewPostMapper newPostMapper;
-	@Autowired
-	private PostCommentMapper postCommentMapper;
+	private final NewsPostRepository newsPostRepository;
+	private final PostCommentRepository postCommentRepository;
+	private final NewPostMapper newPostMapper;
+	private final PostCommentMapper postCommentMapper;
 
 	/**
 	 * 뉴스 게시글 검색어 설정 후 조회 API 전체(검색어 설정을 안 했을 경우) 내용으로 검색 제목으로 검색 내용+전체로 검색
@@ -97,17 +94,9 @@ public class NewsPostServiceImpl implements NewsPostService {
 		// newsPost -> NewsPostResponseDto 변환
 		NewsPostResponseDto newsPostDto = newPostMapper.toDto(newsPost);
 
-		List<PostComment> comments = postCommentRepository
-				.findByTargetIdAndTargetTypeOrderByPostCommentIdDesc(newsPost.getNewsPostId(), TargetType.NEWS);
-		// comments -> CommentResponseDto 변환
-		List<PostCommentResponseDto> commentDtos = postCommentMapper.toDtoList(comments);
-
 		// postLike 도 같은 방식으로 조회
 		// postLike -> PostLikeResponseDto 변환
 		// NewsPostResponseDto.setPostLikes(comments);
-
-		// DTO에 댓글 리스트 세팅
-		newsPostDto.setPostCommentList(commentDtos);
 
 		return newsPostDto;
 	}
@@ -156,16 +145,27 @@ public class NewsPostServiceImpl implements NewsPostService {
 		return 0L;
 	}
 
+	/**
+	 * 특정 뉴스 게시글에 달린 댓글을 페이징 처리하여 조회합니다.
+	 *
+	 * @param newsPostId 조회할 뉴스 게시글 ID
+	 * @param request    페이지 번호(page), 페이지 크기(size) 등의 페이징 요청 정보
+	 * @return 페이징 처리된 댓글 DTO 목록
+	 */
 	@Override
 	public Page<PostCommentResponseDto> getCommentsByNewsPostId(Long newsPostId, PostCommentRequestDto request) {
-		List<PostComment> comments = postCommentRepository
-				.findByTargetIdAndTargetTypeOrderByPostCommentIdDesc(newsPostId, TargetType.NEWS);
+		int curPage = request.getCurPage() > 0 ? request.getCurPage() - 1 : 0;
+		int pageSize = request.getPageSize() > 0 ? request.getPageSize() : 10;
 
-		// comments -> CommentResponseDto 변환
-		List<PostCommentResponseDto> commentDtos = postCommentMapper.toDtoList(comments);
+		// 페이징 및 정렬 조건 설정 (생성일자 기준 내림차순)
+		Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by("createdAt").descending());
 
-//		newsPostDto.setPostCommentList(commentDtos);
+		// targetId와 targetType(뉴스 게시글) 기준으로 댓글을 페이징 조회
+		Page<PostComment> commentPage = postCommentRepository.findByTargetIdAndTargetType(newsPostId, TargetType.NEWS,
+				pageable);
 
-		return null;
+		// 엔티티 → DTO 변환하여 반환
+		return commentPage.map(postCommentMapper::toDto);
 	}
+
 }

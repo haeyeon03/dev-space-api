@@ -1,9 +1,5 @@
 package kh.devspaceapi.controller;
 
-import java.util.List;
-import java.util.Map;
-
-import kh.devspaceapi.comm.response.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +7,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,6 +18,7 @@ import kh.devspaceapi.model.dto.newsPost.NewsPostResponseDto;
 import kh.devspaceapi.model.dto.postComment.PostCommentRequestDto;
 import kh.devspaceapi.model.dto.postComment.PostCommentResponseDto;
 import kh.devspaceapi.service.NewsPostService;
+import kh.devspaceapi.service.PostCommentService;
 import lombok.extern.slf4j.Slf4j;
 
 @RequestMapping("/api/news-posts")
@@ -29,6 +28,8 @@ public class NewsPostController {
 
 	@Autowired
 	private NewsPostService newsPostService;
+	@Autowired
+	private PostCommentService postCommentService;
 
 	/**
 	 * 뉴스 게시글 검색어 설정 후 조회 API
@@ -74,9 +75,10 @@ public class NewsPostController {
 	 * 뉴스 게시글 댓글 목록 조회 API
 	 *
 	 * 특정 뉴스 게시글(newsPostId)에 달린 댓글을 페이지 단위로 조회
+	 * 요청 시 page, size, sort 등의 페이징 정보를 함께 전달 가
 	 *
 	 * @param newsPostId 조회할 뉴스 게시글 ID
-	 * @param pageable   페이지 번호(page), 페이지 크기(size), 정렬 기준(sort) 등의 정보
+	 * @param request 페이지 번호(page), 페이지 크기(size) 등의 페이징 요청 정보
 	 * @return 페이징 처리된 댓글 목록
 	 */
 	@GetMapping("/{newsPostId}/comments")
@@ -87,16 +89,6 @@ public class NewsPostController {
 
 		return ResponseEntity.ok(comments);
 	}
-
-	/**
-	 * 뉴스 게시글 댓글 수정 API
-	 *
-	 * 특정 ID(newsPostId)를 가진 뉴스 게시글의 댓글 조회
-	 *
-	 * @param
-	 * @return
-	 */
-//	@PutMapping("/{newsPostId}/comments")
 
 	/**
 	 * 뉴스 게시글 조회 후 삭제

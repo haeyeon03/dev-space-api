@@ -11,5 +11,14 @@ import kh.devspaceapi.model.entity.UserPenalty;
 
 public interface UserPenaltyRepository extends JpaRepository<UserPenalty, Integer>{
 
+	@Query(value = """
+		    SELECT *
+		    FROM USER_PENALTY up
+		    WHERE up.USER_ID IN (:userIds)
+		      AND up.EFFECTIVE_AT IS NOT NULL
+		      AND up.EFFECTIVE_AT <= SYSTIMESTAMP
+		      AND (up.EFFECTIVE_AT + NUMTODSINTERVAL(up.DURATION_SEC, 'SECOND')) > SYSTIMESTAMP
+		""", nativeQuery = true)
+	    List<UserPenalty> findActivePenaltiesByUserIds(@Param("userIds") Collection<String> userIds);
 
 }

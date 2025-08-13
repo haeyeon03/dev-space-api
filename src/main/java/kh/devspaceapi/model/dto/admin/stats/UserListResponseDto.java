@@ -19,7 +19,7 @@ public class UserListResponseDto {
 	private String userId;
     private String nickname;
     private String gender;
-    private String role;
+    private String role; //"admin" | "user"
     private boolean banned; // 정지 여부
     private LocalDateTime banEndAt; // 정지 종료일 (null이면 정지 아님)
 

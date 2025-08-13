@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import kh.devspaceapi.model.dto.admin.stats.GenderRatioResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.SummaryResponseDto;
+import kh.devspaceapi.model.dto.admin.stats.UserDetailResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.UserListResponseDto;
 import kh.devspaceapi.model.entity.UserPenalty;
 import kh.devspaceapi.model.entity.Users;
@@ -52,9 +53,11 @@ public class AdminServiceImpl implements AdminService {
 		return new SummaryResponseDto(totalUsers, totalNewsPosts, totalComments, totalBoardPosts);
 	}
 
-	// 남녀 성별비율 count 메서드
-	// gender group by를 통해 불러온 데이터를
-	// List<Object[]>과 반복문을 사용하여 배열형태로 M:0명, 여:0명 데이터를 가져온당
+	/*
+	 * 남녀 성별비율 count 메서드 gender group by를 통해 불러온 데이터를
+	 * List<Object[]>과 반복문을 사용하여
+	 * 배열형태로 M:0명, 여:0명 데이터를 가져온당
+	 */
 	@Override
 	public GenderRatioResponseDto getGenderRatio() {
 		List<Object[]> results = usersRepository.countUserByGender();
@@ -76,7 +79,8 @@ public class AdminServiceImpl implements AdminService {
 		// userRepository에서 받은 M, F의 카운트 수를 리턴
 		return new GenderRatioResponseDto(maleCounts, femaleCounts);
 	}
-
+	
+	//유저 
 	@Override
 	public Page<UserListResponseDto> getUserList(String searchType, String keyword, String role, Pageable pageable) {
 
@@ -124,7 +128,8 @@ public class AdminServiceImpl implements AdminService {
         // 총 건수는 원래 page totalElements 사용(필터 후 사이즈가 줄어도 페이지네이션 일관성 유지)
         return new PageImpl<>(dtos, pageable, page.getTotalElements());
     }
-
+	
+	//
     private UserListResponseDto toDto(Users u, boolean isBanned, LocalDateTime banEndAt) {
         return UserListResponseDto.builder()
                 .userId(u.getUserId())
@@ -136,5 +141,43 @@ public class AdminServiceImpl implements AdminService {
                 .build();
 
 	}
+    
+    //유저 상세정보
+    public UserDetailResponseDto getUserDetail(String userId) {
+        Users u = usersRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다: " + userId));
+
+        // 최근 패널티 1건
+        UserPenalty p = userPenaltyRepository
+                .findFirstByUser_UserIdOrderByEffectiveAtDesc(userId)
+                .orElse(null);
+
+        boolean banned = false;
+        LocalDateTime banEndAt = null;
+        String banReason = null;
+        LocalDateTime banEffectiveAt = null;
+        Long banDurationSec = null;
+        // 정지된 데이터가 있을경우 가장 최근에 활동정지 정보 표시
+        if (p != null && p.getEffectiveAt() != null) {
+            banEffectiveAt = p.getEffectiveAt();
+            banDurationSec = p.getDurationSec();
+            banEndAt = banEffectiveAt.plusSeconds(banDurationSec);
+            banned = LocalDateTime.now().isBefore(banEndAt);
+            banReason = p.getReason();
+        }
+
+        return UserDetailResponseDto.builder()
+                .userId(u.getUserId())
+                .nickname(u.getNickname())
+                .gender(u.getGender())
+                .role(u.getRole())
+                .admin("admin".equalsIgnoreCase(u.getRole()))
+                .banned(banned)
+                .banReason(banReason)
+                .banEffectiveAt(banEffectiveAt)
+                .banDurationSec(banDurationSec)
+                .banEndAt(banEndAt)
+                .build();
+    }
 
 }

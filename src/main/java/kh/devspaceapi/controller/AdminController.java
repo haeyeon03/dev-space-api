@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,6 +20,7 @@ import kh.devspaceapi.model.dto.admin.stats.AgeGenderDistributionResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.DailyViewCountResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.GenderRatioResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.SummaryResponseDto;
+import kh.devspaceapi.model.dto.admin.stats.UserDetailResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.UserListResponseDto;
 import kh.devspaceapi.service.AdminService;
 import kh.devspaceapi.service.PostViewLogService;
@@ -104,5 +106,15 @@ public class AdminController {
         return ResponseEntity.ok(
         		adminService.getUserList(searchType, keyword, role, pageable)
         );
+    }
+    
+    /**
+     * 유저 상세 조회 (수정 화면 이동용)
+     * GET /api/admins/users/{userId}
+     * @PathVariable userId를 통해 유저정보 화면으로 이동
+     */
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<UserDetailResponseDto> getUserDetail(@PathVariable String userId) {
+        return ResponseEntity.ok(adminService.getUserDetail(userId));
     }
 }

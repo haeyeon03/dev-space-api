@@ -26,6 +26,7 @@ import kh.devspaceapi.model.mapper.PostCommentMapper;
 import kh.devspaceapi.repository.NewsPostRepository;
 import kh.devspaceapi.repository.PostCommentRepository;
 import kh.devspaceapi.service.NewsPostService;
+import kh.devspaceapi.service.PostCommentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,6 +38,7 @@ public class NewsPostServiceImpl implements NewsPostService {
 	private final PostCommentRepository postCommentRepository;
 	private final NewPostMapper newPostMapper;
 	private final PostCommentMapper postCommentMapper;
+	private final PostCommentService postCommentService;
 
 	/**
 	 * 뉴스 게시글 검색어 설정 후 조회 API 전체(검색어 설정을 안 했을 경우) 내용으로 검색 제목으로 검색 내용+전체로 검색
@@ -102,6 +104,29 @@ public class NewsPostServiceImpl implements NewsPostService {
 	}
 
 	/**
+	 * 특정 뉴스 게시글에 달린 댓글을 페이징 처리하여 조회합니다.
+	 *
+	 * @param newsPostId 조회할 뉴스 게시글 ID
+	 * @param request    페이지 번호(page), 페이지 크기(size) 등의 페이징 요청 정보
+	 * @return 페이징 처리된 댓글 DTO 목록
+	 */
+	@Override
+	public Page<PostCommentResponseDto> getCommentsByNewsPostId(Long newsPostId, PostCommentRequestDto request) {
+		int curPage = request.getCurPage() > 0 ? request.getCurPage() - 1 : 0;
+		int pageSize = request.getPageSize() > 0 ? request.getPageSize() : 10;
+
+		// 페이징 및 정렬 조건 설정 (생성일자 기준 내림차순)
+		Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by("createdAt").descending());
+
+		// targetId와 targetType(뉴스 게시글) 기준으로 댓글을 페이징 조회
+		Page<PostComment> commentPage = postCommentRepository.findByTargetIdAndTargetType(newsPostId, TargetType.NEWS,
+				pageable);
+
+		// 엔티티 → DTO 변환하여 반환
+		return commentPage.map(postCommentMapper::toDto);
+	}
+
+	/**
 	 * 뉴스 게시글 및 해당 게시글에 달린 모든 댓글을 논리적으로 삭제 처리 (물리 삭제(DELETE) 대신 active 필드를 false로
 	 * 변경)
 	 *
@@ -144,28 +169,4 @@ public class NewsPostServiceImpl implements NewsPostService {
 		// 예외가 발생해서 try 블록을 정상적으로 마치지 못한 경우 0 반환 (실패)
 		return 0L;
 	}
-
-	/**
-	 * 특정 뉴스 게시글에 달린 댓글을 페이징 처리하여 조회합니다.
-	 *
-	 * @param newsPostId 조회할 뉴스 게시글 ID
-	 * @param request    페이지 번호(page), 페이지 크기(size) 등의 페이징 요청 정보
-	 * @return 페이징 처리된 댓글 DTO 목록
-	 */
-	@Override
-	public Page<PostCommentResponseDto> getCommentsByNewsPostId(Long newsPostId, PostCommentRequestDto request) {
-		int curPage = request.getCurPage() > 0 ? request.getCurPage() - 1 : 0;
-		int pageSize = request.getPageSize() > 0 ? request.getPageSize() : 10;
-
-		// 페이징 및 정렬 조건 설정 (생성일자 기준 내림차순)
-		Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by("createdAt").descending());
-
-		// targetId와 targetType(뉴스 게시글) 기준으로 댓글을 페이징 조회
-		Page<PostComment> commentPage = postCommentRepository.findByTargetIdAndTargetType(newsPostId, TargetType.NEWS,
-				pageable);
-
-		// 엔티티 → DTO 변환하여 반환
-		return commentPage.map(postCommentMapper::toDto);
-	}
-
 }

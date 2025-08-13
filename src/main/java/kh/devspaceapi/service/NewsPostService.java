@@ -1,7 +1,6 @@
 package kh.devspaceapi.service;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import kh.devspaceapi.comm.response.PageResponse;
 import kh.devspaceapi.model.dto.newsPost.NewsPostRequestDto;
@@ -26,7 +25,6 @@ public interface NewsPostService {
 	 * @return NewsPostResponseDto 뉴스 게시글의 상세 정보를 담은 DTO 객체
 	 */
 	NewsPostResponseDto getNewsPostById(Long newsPostId);
-
 
 	/**
 	 * 지정된 뉴스 게시글 ID에 해당하는 뉴스 게시글을 삭제

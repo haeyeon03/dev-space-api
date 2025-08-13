@@ -49,5 +49,9 @@ public class PostViewLog {
 	private Users userId;
 	//초회 발생 일시
 	private Timestamp viewDate;
+	//조회수
+    private int viewCount;
+    //댓글수
+    private int commentCount;
 
 }

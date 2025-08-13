@@ -18,6 +18,6 @@ public interface AdminService {
     GenderRatioResponseDto getGenderRatio();
     
     //관리자 유저 리스트 service
-    Page<UserListResponseDto> getUserList(String searchType, String keyword, String role, Pageable pageable);
+//    Page<UserListResponseDto> getUserList(String searchType, String keyword, String role, Pageable pageable);
 
 }

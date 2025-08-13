@@ -28,8 +28,8 @@ public class PostViewLogServiceImpl implements PostViewLogService {
         Timestamp endTsExclusive = Timestamp.valueOf(endDate.plusDays(1).atStartOfDay());
 
 		// postViewLogRepository의 getDailyViewCount()로 가져온 날짜와 조회수를 배열로 저장
-		return postViewLogRepository.getDailyViewCountBetween(startTs, endTsExclusive);
-
+//		return postViewLogRepository.getDailyViewCountBetween(startTs, endTsExclusive);
+return null;
 	}
 
 	/*
@@ -39,10 +39,11 @@ public class PostViewLogServiceImpl implements PostViewLogService {
 	 */
 	@Override
 	public List<AgeGenderDistributionResponseDto> getAgeGenderDistribution(LocalDate startDate, LocalDate endDate) {
-		List<Object[]> results = postViewLogRepository.getAgeGenderDistribution(startDate.atStartOfDay(),
-				endDate.atTime(23, 59, 59));
-		return results.stream().map(row -> new AgeGenderDistributionResponseDto((String) row[0], (String) row[1],
-				((Number) row[2]).longValue())).toList();
+//		List<Object[]> results = postViewLogRepository.getAgeGenderDistribution(startDate.atStartOfDay(),
+//				endDate.atTime(23, 59, 59));
+//		return results.stream().map(row -> new AgeGenderDistributionResponseDto((String) row[0], (String) row[1],
+//				((Number) row[2]).longValue())).toList();
+		return null;
 	}
 
 }

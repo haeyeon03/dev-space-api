@@ -94,15 +94,15 @@ public class AdminController {
      * searchType: name | nickname
      * role: admin | user | banned
      */
-    @GetMapping("/members")
-    public ResponseEntity<Page<UserListResponseDto>> getMembers(
-            @RequestParam(required = false) String searchType,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String role,
-            @PageableDefault(size = 10, sort = "userId", direction = Sort.Direction.DESC) Pageable pageable
-    ) {
-        return ResponseEntity.ok(
-        		adminService.getUserList(searchType, keyword, role, pageable)
-        );
-    }
+//    @GetMapping("/members")
+//    public ResponseEntity<Page<UserListResponseDto>> getMembers(
+//            @RequestParam(required = false) String searchType,
+//            @RequestParam(required = false) String keyword,
+//            @RequestParam(required = false) String role,
+//            @PageableDefault(size = 10, sort = "userId", direction = Sort.Direction.DESC) Pageable pageable
+//    ) {
+//        return ResponseEntity.ok(
+//        		adminService.getUserList(searchType, keyword, role, pageable)
+//        );
+//    }
 }

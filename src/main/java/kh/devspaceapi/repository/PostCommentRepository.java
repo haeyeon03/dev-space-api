@@ -17,6 +17,6 @@ public interface PostCommentRepository extends JpaRepository<PostComment, Long> 
 
 	List<PostComment> findByTargetIdAndTargetType(Long targetId, TargetType targetType);
 
-	Page<PostComment> findByTargetIdAndTargetTypeAndActiveFalse(Long targetId, TargetType targetType,
+	Page<PostComment> findByTargetIdAndTargetTypeAndActiveTrue(Long targetId, TargetType targetType,
 																Pageable pageable);
 }

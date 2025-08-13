@@ -12,9 +12,9 @@ public interface PostCommentService {
 
 	public PostCommentResponseDto get(Long commentId);
 
-	public PostCommentResponseDto update(Long commentId, String content);
+	public PostCommentResponseDto update(Long targetId, TargetType targetType, Long commentId, String content);
 
-	public void delete(Long commentId);
+    public void delete(Long targetId, TargetType targetType, Long commentId);
 
 	public Page<PostCommentResponseDto> page(Long targetId, TargetType targetType, Pageable pageable);
 

@@ -25,6 +25,4 @@ public class BoardPost extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "USER_ID", referencedColumnName = "USER_ID")
     private Users user;
-    private int viewCount;
-    private int commentCount;
 }

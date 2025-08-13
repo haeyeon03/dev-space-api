@@ -63,18 +63,18 @@ public class BoardPostServiceImpl implements BoardPostService {
 	public void delete(BoardPost boardPost) {
 		BoardPost deletedPost = boardPostRepository.findById(boardPost.getBoardPostId())
 				.orElseThrow(() -> new IllegalArgumentException("게시글 찾을 수 없음 " + boardPost.getBoardPostId()));
-		deletedPost.setActive(true);
+		deletedPost.setActive(false);
 		deletedPost.setUpdatedAt(LocalDateTime.now());
 	}
 
 	@Override
 	public Page<BoardPost> selectAll(Pageable pageable) {
-		return boardPostRepository.findByActiveFalse(pageable);
+		return boardPostRepository.findByActiveTrue(pageable);
 	}
 
 	@Override
 	public Page<BoardPost> selectAllByCategory(String category, Pageable pageable) {
-		return boardPostRepository.findByActiveFalseAndCategory(category, pageable);
+		return boardPostRepository.findByActiveTrueAndCategory(category, pageable);
 	}
 
 	@Override
@@ -86,36 +86,36 @@ public class BoardPostServiceImpl implements BoardPostService {
 
 		if (!hasKw) {
 			// 키워드 없고 카테고리만 있으면 해당 카테고리 전체
-			return hasCat ? boardPostRepository.findByActiveFalseAndCategory(category, pageable)
-					: boardPostRepository.findByActiveFalse(pageable);
+			return hasCat ? boardPostRepository.findByActiveTrueAndCategory(category, pageable)
+					: boardPostRepository.findByActiveTrue(pageable);
 		}
 
 		// 키워드가 있을 때
 		if (hasCat) {
 			if ("title".equals(type)) {
-				return boardPostRepository.findByActiveFalseAndCategoryAndTitleContaining(category, kw, pageable);
+				return boardPostRepository.findByActiveTrueAndCategoryAndTitleContaining(category, kw, pageable);
 			} else if ("nickname".equals(type)) {
-				return boardPostRepository.findByActiveFalseAndCategoryAndUser_NicknameContaining(category, kw,
+				return boardPostRepository.findByActiveTrueAndCategoryAndUser_NicknameContaining(category, kw,
 						pageable);
 			} else if ("titlecontent".equals(type) || "title+content".equals(type)) {
 				return boardPostRepository
-						.findByActiveFalseAndCategoryAndTitleContainingOrActiveFalseAndCategoryAndContentContaining(
+						.findByActiveTrueAndCategoryAndTitleContainingOrActiveTrueAndCategoryAndContentContaining(
 								category, kw, category, kw, pageable);
 			} else {
 				// 타입이 없거나 이상하면 카테고리 전체
-				return boardPostRepository.findByActiveFalseAndCategory(category, pageable);
+				return boardPostRepository.findByActiveTrueAndCategory(category, pageable);
 			}
 		} else {
 			// 카테고리 없음(기존 로직)
 			if ("title".equals(type)) {
-				return boardPostRepository.findByActiveFalseAndTitleContaining(kw, pageable);
+				return boardPostRepository.findByActiveTrueAndTitleContaining(kw, pageable);
 			} else if ("nickname".equals(type)) {
-				return boardPostRepository.findByActiveFalseAndUser_NicknameContaining(kw, pageable);
+				return boardPostRepository.findByActiveTrueAndUser_NicknameContaining(kw, pageable);
 			} else if ("titlecontent".equals(type) || "title+content".equals(type)) {
-				return boardPostRepository.findByActiveFalseAndTitleContainingOrActiveFalseAndContentContaining(kw, kw,
+				return boardPostRepository.findByActiveTrueAndTitleContainingOrActiveTrueAndContentContaining(kw, kw,
 						pageable);
 			} else {
-				return boardPostRepository.findByActiveFalse(pageable);
+				return boardPostRepository.findByActiveTrue(pageable);
 			}
 		}
 	}

@@ -1,29 +1,29 @@
 package kh.devspaceapi.scheduler;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import kh.devspaceapi.external.news.NaverNewsApiProperty;
-import kh.devspaceapi.external.site.AiTimesNewsFetcher;
-import kh.devspaceapi.external.site.NaverNewsFetcher;
-import kh.devspaceapi.external.api.NewsNewsApiClient;
-import kh.devspaceapi.external.api.dto.ContentResult;
-import kh.devspaceapi.external.api.dto.NaverNewsApiResponseDto;
-import kh.devspaceapi.external.api.dto.NaverNewsApiItem;
-import kh.devspaceapi.external.selector.NewsSiteSelector;
-import kh.devspaceapi.model.entity.NewsPost;
-import kh.devspaceapi.repository.NewsPostRepository;
+import java.util.ArrayList;
+import java.util.List;
 
-import lombok.RequiredArgsConstructor;
-
-import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import kh.devspaceapi.external.api.NaverNewsApiProperty;
+import kh.devspaceapi.external.api.NewsNewsApiClient;
+import kh.devspaceapi.external.api.dto.ContentResult;
+import kh.devspaceapi.external.api.dto.NaverNewsApiItem;
+import kh.devspaceapi.external.api.dto.NaverNewsApiResponseDto;
+import kh.devspaceapi.external.selector.NewsSiteSelector;
+import kh.devspaceapi.external.site.AiTimesNewsFetcher;
+import kh.devspaceapi.external.site.NaverNewsFetcher;
+import kh.devspaceapi.model.entity.NewsPost;
+import kh.devspaceapi.repository.NewsPostRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 @Component

@@ -1,5 +1,6 @@
 package kh.devspaceapi.service.impl;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 import org.springframework.data.domain.Page;
@@ -7,8 +8,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import kh.devspaceapi.model.dto.boardPost.BoardPostResponseDto;
 import kh.devspaceapi.model.entity.BoardPost;
+import kh.devspaceapi.model.entity.PostViewLog;
+import kh.devspaceapi.model.entity.enums.TargetType;
 import kh.devspaceapi.repository.BoardPostRepository;
+import kh.devspaceapi.repository.PostViewLogRepository;
 import kh.devspaceapi.service.BoardPostService;
 import lombok.RequiredArgsConstructor;
 
@@ -17,6 +24,10 @@ import lombok.RequiredArgsConstructor;
 public class BoardPostServiceImpl implements BoardPostService {
 
 	private final BoardPostRepository boardPostRepository;
+	private final PostViewLogRepository postViewLogRepository;
+
+	@PersistenceContext
+	private EntityManager em;
 
 	@Override
 	@Transactional
@@ -32,8 +43,7 @@ public class BoardPostServiceImpl implements BoardPostService {
 	public BoardPost select(BoardPost boardPost) {
 		BoardPost selectedPost = boardPostRepository.findByBoardPostId(boardPost.getBoardPostId())
 				.orElseThrow(() -> new IllegalArgumentException("게시글 찾을 수 없음 " + boardPost.getBoardPostId()));
-		selectedPost.setViewCount(selectedPost.getViewCount() + 1);
-		return selectedPost;
+		return selectedPost;	
 	}
 
 	@Override
@@ -75,7 +85,7 @@ public class BoardPostServiceImpl implements BoardPostService {
 		boolean hasCat = category != null && !category.trim().isEmpty();
 
 		if (!hasKw) {
-			// 키워드 없고 카테고리만 있으면: 해당 카테고리 전체
+			// 키워드 없고 카테고리만 있으면 해당 카테고리 전체
 			return hasCat ? boardPostRepository.findByActiveFalseAndCategory(category, pageable)
 					: boardPostRepository.findByActiveFalse(pageable);
 		}
@@ -109,5 +119,58 @@ public class BoardPostServiceImpl implements BoardPostService {
 			}
 		}
 	}
+
+	@Override
+	@Transactional
+	public BoardPostResponseDto getPost(Long postId) {
+		BoardPost post = boardPostRepository.findByBoardPostId(postId)
+				.orElseThrow(() -> new IllegalArgumentException("게시글 찾을 수 없음 " + postId));
+
+		// 조회 로그 저장
+		postViewLogRepository.save(PostViewLog.builder().targetId(post.getBoardPostId()).targetType(TargetType.BOARD).userId(null) 
+						.viewDate(new Timestamp(System.currentTimeMillis())).viewCount(1).commentCount(0).build());
+
+		// 합계
+        int views = getViewCountOf(post.getBoardPostId());
+        int comments = getCommentCountOf(post.getBoardPostId());
+
+		// DTO 반환
+		return BoardPostResponseDto.builder().boardPostId(post.getBoardPostId()).title(post.getTitle())
+				.category(post.getCategory()).content(post.getContent())
+				.userNickname(post.getUser() != null ? post.getUser().getNickname() : null)
+				.createdAt(post.getCreatedAt()).viewCount(views).commentCount(comments).build();
+	}
+
+	// 댓글수 증가
+	@Override
+	@Transactional
+	public void plusCommentCount(Long postId) {
+		postViewLogRepository.save(PostViewLog.builder().targetId(postId).targetType(TargetType.BOARD).userId(null) 
+				.viewDate(new Timestamp(System.currentTimeMillis())).viewCount(0).commentCount(1).build());
+	}
+	
+	 // 조회수 합계
+    @Override
+    public int getViewCountOf(Long postId) {
+        Long sum = em.createQuery(
+            "select coalesce(sum(p.viewCount),0) from PostViewLog p " +
+            "where p.targetId = :id and p.targetType = :type", Long.class)
+            .setParameter("id", postId)
+            .setParameter("type", TargetType.BOARD)
+            .getSingleResult();
+        return sum.intValue();
+    }
+
+    // 댓글수 합계
+    @Override
+    public int getCommentCountOf(Long postId) {
+        Long sum = em.createQuery(
+            "select coalesce(sum(p.commentCount),0) from PostViewLog p " +
+            "where p.targetId = :id and p.targetType = :type", Long.class)
+            .setParameter("id", postId)
+            .setParameter("type", TargetType.BOARD)
+            .getSingleResult();
+        return sum.intValue();
+    }
 
 }

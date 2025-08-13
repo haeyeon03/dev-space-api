@@ -1,4 +1,4 @@
-package kh.devspaceapi.external.news;
+package kh.devspaceapi.external.api;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

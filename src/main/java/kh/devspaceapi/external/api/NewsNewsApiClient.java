@@ -1,6 +1,6 @@
 package kh.devspaceapi.external.api;
 
-import kh.devspaceapi.external.news.NaverNewsApiProperty;
+import kh.devspaceapi.external.api.NaverNewsApiProperty;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

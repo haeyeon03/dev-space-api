@@ -1,5 +1,6 @@
 package kh.devspaceapi.model.dto.admin.stats;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -11,5 +12,7 @@ public class DailyViewCountResponseDto {
 	private String date;
 	//조회수
 	private Long viewCount;
+	
+	
 	
 }

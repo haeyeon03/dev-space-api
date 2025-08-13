@@ -8,20 +8,27 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import kh.devspaceapi.model.dto.admin.stats.DailyViewCountResponseDto;
 import kh.devspaceapi.model.entity.PostViewLog;
 
 public interface PostViewLogRepository extends JpaRepository<PostViewLog, Long> {
 
 	//PostViewLog에 저장된 날짜별 조회수를 정렬한 뒤 가져오는 쿼리
-	@Query("SELECT FUNCTION('TO_CHAR', p.viewDate, 'YYYY-MM-DD')"+
-	"AS viewDate, COUNT(p) AS viewCount FROM PostViewLog p "+
-	"GROUP BY FUNCTION('TO_CHAR',p.viewDate, 'YYYY-MM-DD')"+
-	"ORDER BY viewDate ASC")
-	List<Object[]> getDailyViewCountBetween(
-			//기간별 조회를 할 수 있게해주는 between조건 파람
-			@Param("startDate") Timestamp stertDate,
-			@Param("endDate") Timestamp endDate
-			);
+	@Query("""
+	        SELECT new DailyViewCountResponseDto(
+	            FUNCTION('TO_CHAR', p.viewDate, 'YYYY-MM-DD'),
+	            COUNT(p)
+	        )
+	        FROM PostViewLog p
+	        WHERE p.viewDate >= :startTs
+	          AND p.viewDate <  :endDate
+	        GROUP BY FUNCTION('TO_CHAR', p.viewDate, 'YYYY-MM-DD')
+	        ORDER BY FUNCTION('TO_CHAR', p.viewDate, 'YYYY-MM-DD')
+	    """)
+	List<DailyViewCountResponseDto> getDailyViewCountBetween(@Param("startDate") Timestamp startTs, @Param("endDate") Timestamp endTsExclusive);
+	//기간별 조회를 할 수 있게해주는 between조건 파람
+			
+			
 	
 	/*
 	 * Users(gender,birthDate)와 PostViewLogs(viewDate)를 조인하여 나이대와 성별에 따라 CASE로 분류하여

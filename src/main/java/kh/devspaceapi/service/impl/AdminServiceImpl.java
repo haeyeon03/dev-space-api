@@ -1,5 +1,6 @@
 package kh.devspaceapi.service.impl;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -12,9 +13,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import kh.devspaceapi.model.dto.admin.stats.ApplyPenaltyRequestDto;
 import kh.devspaceapi.model.dto.admin.stats.GenderRatioResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.SummaryResponseDto;
+import kh.devspaceapi.model.dto.admin.stats.UpdateRoleRequestDto;
 import kh.devspaceapi.model.dto.admin.stats.UserDetailResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.UserListResponseDto;
 import kh.devspaceapi.model.entity.UserPenalty;
@@ -179,5 +183,96 @@ public class AdminServiceImpl implements AdminService {
                 .banEndAt(banEndAt)
                 .build();
     }
+    
+    @Override
+	@Transactional
+	public UserDetailResponseDto updateRole(String userId, UpdateRoleRequestDto req) {
+		if (req.getRole() == null
+				|| !(req.getRole().equalsIgnoreCase("admin") || req.getRole().equalsIgnoreCase("user"))) {
+			throw new IllegalArgumentException("role은 'admin' 또는 'user'만 허용됩니다.");
+		}
+
+		Users user = usersRepository.findById(userId)
+				.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+
+		user.setRole(req.getRole().toLowerCase());
+		usersRepository.save(user);
+
+		return toDetailDto(user);
+	}
+
+	@Override
+	@Transactional
+	public UserDetailResponseDto applyPenalty(String userId, ApplyPenaltyRequestDto req) {
+		if (req.getReason() == null || req.getReason().isBlank()) {
+			throw new IllegalArgumentException("reason은 필수입니다.");
+		}
+		if (req.getEffectiveAt() == null) {
+			throw new IllegalArgumentException("effectiveAt은 필수입니다.");
+		}
+		if (req.getDurationSec() < 0) {
+			throw new IllegalArgumentException("durationSec은 0 이상이어야 합니다.");
+		}
+
+		Users user = usersRepository.findById(userId)
+				.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+
+		UserPenalty up = new UserPenalty();
+		up.setUser(user);
+		up.setReason(req.getReason());
+		up.setReportedAt(LocalDateTime.now());
+		up.setEffectiveAt(req.getEffectiveAt());
+		up.setDurationSec(req.getDurationSec());
+
+		userPenaltyRepository.save(up);
+
+		return toDetailDto(user);
+	}
+
+	@Override
+	@Transactional
+	public UserDetailResponseDto liftPenaltyNow(String userId) {
+		Users user = usersRepository.findById(userId)
+				.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+
+		// 가장 최근 패널티 1건을 가져와 종료시각을 now로 맞춰줌
+		userPenaltyRepository.findFirstByUser_UserIdOrderByEffectiveAtDesc(userId).ifPresent(latest -> {
+			if (latest.getEffectiveAt() != null) {
+				LocalDateTime now = LocalDateTime.now();
+				if (now.isAfter(latest.getEffectiveAt())) {
+					long newDuration = Duration.between(latest.getEffectiveAt(), now).getSeconds();
+					latest.setDurationSec(Math.max(newDuration, 0));
+					userPenaltyRepository.save(latest);
+				} else {
+					// effectiveAt이 미래면 즉시 해제하려면 duration=0
+					latest.setDurationSec(0);
+					userPenaltyRepository.save(latest);
+				}
+			}
+		});
+
+		return toDetailDto(user);
+	}
+
+	// 상세 DTO 변환
+	private UserDetailResponseDto toDetailDto(Users user) {
+		// 최신 패널티 1건
+		UserPenalty latest = userPenaltyRepository.findFirstByUser_UserIdOrderByEffectiveAtDesc(user.getUserId())
+				.orElse(null);
+
+		boolean banned = false;
+		LocalDateTime banEndAt = null;
+
+		if (latest != null && latest.getEffectiveAt() != null) {
+			banEndAt = latest.getEffectiveAt().plusSeconds(latest.getDurationSec());
+			banned = LocalDateTime.now().isBefore(banEndAt);
+		}
+		return UserDetailResponseDto.builder().userId(user.getUserId()).nickname(user.getNickname())
+				.gender(user.getGender()).role(user.getRole()).banned(banned).banEndAt(banEndAt)
+				.banReason(latest != null ? latest.getReason() : null)
+				.reportedAt(latest != null ? latest.getReportedAt() : null)
+				.banEffectiveAt(latest != null ? latest.getEffectiveAt() : null)
+				.banDurationSec(latest != null ? latest.getDurationSec() : null).build();
+	}
 
 }

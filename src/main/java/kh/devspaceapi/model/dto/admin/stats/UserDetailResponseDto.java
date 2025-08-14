@@ -20,6 +20,7 @@ public class UserDetailResponseDto {
 	private boolean admin; // role == "admin"
 	private boolean banned; // 정지 혹은 활동가능 상태
 	private String banReason; //패널티 사유
+	private LocalDateTime reportedAt; // 신고가 접수된 시간
 	private LocalDateTime banEffectiveAt; // 활동 정지 적용시간
 	private Long banDurationSec; // 활동정지 지속시간
 	private LocalDateTime banEndAt; // 종료시각

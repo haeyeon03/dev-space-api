@@ -10,16 +10,21 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import kh.devspaceapi.comm.response.ApiResponse;
 import kh.devspaceapi.model.dto.admin.stats.AgeGenderDistributionResponseDto;
+import kh.devspaceapi.model.dto.admin.stats.ApplyPenaltyRequestDto;
 import kh.devspaceapi.model.dto.admin.stats.DailyViewCountResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.GenderRatioResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.SummaryResponseDto;
+import kh.devspaceapi.model.dto.admin.stats.UpdateRoleRequestDto;
 import kh.devspaceapi.model.dto.admin.stats.UserDetailResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.UserListResponseDto;
 import kh.devspaceapi.service.AdminService;
@@ -116,5 +121,33 @@ public class AdminController {
     @GetMapping("/users/{userId}")
     public ResponseEntity<UserDetailResponseDto> getUserDetail(@PathVariable String userId) {
         return ResponseEntity.ok(adminService.getUserDetail(userId));
+    }
+    
+    /* 유저권한부여 "admin" or "user"
+     * 
+     * 추후 기능이 추가되고 권한을 세분화 할때 수정하는 부분입니다.
+     * 
+     */
+    @PatchMapping("/users/{userId}/role")
+    public ResponseEntity<UserDetailResponseDto> updateRole(
+            @PathVariable String userId,
+            @RequestBody UpdateRoleRequestDto req
+    ) {
+        return ResponseEntity.ok(adminService.updateRole(userId, req));
+    }
+
+    /** 정지 등록 */
+    @PostMapping("/users/{userId}/penalties")
+    public ResponseEntity<UserDetailResponseDto> applyPenalty(
+            @PathVariable String userId,
+            @RequestBody ApplyPenaltyRequestDto req
+    ) {
+        return ResponseEntity.ok(adminService.applyPenalty(userId, req));
+    }
+
+    /** 정지 해제(즉시) */
+    @PostMapping("/users/{userId}/penalties/lift")
+    public ResponseEntity<UserDetailResponseDto> liftPenaltyNow(@PathVariable String userId) {
+        return ResponseEntity.ok(adminService.liftPenaltyNow(userId));
     }
 }

@@ -125,7 +125,7 @@ public class AdminController {
     
     /* 유저권한부여 "admin" or "user"
      * 
-     * 추후 기능이 추가되고 권한을 세분화 할때 수정하는 부분입니다.
+     * 추후 기능이 추가되고 권한을 세분화 할때 수정하는 부분
      * 
      */
     @PatchMapping("/users/{userId}/role")
@@ -136,7 +136,11 @@ public class AdminController {
         return ResponseEntity.ok(adminService.updateRole(userId, req));
     }
 
-    /** 정지 등록 */
+    /*
+     *  정지 등록 
+     *  사유, 정지시각, 정지기간 입력필수
+     *  
+     */
     @PostMapping("/users/{userId}/penalties")
     public ResponseEntity<UserDetailResponseDto> applyPenalty(
             @PathVariable String userId,
@@ -145,7 +149,12 @@ public class AdminController {
         return ResponseEntity.ok(adminService.applyPenalty(userId, req));
     }
 
-    /** 정지 해제(즉시) */
+    /* 정지 해제(즉시) 
+     * 
+     * 잘못된 신고등으로 인해 등록된
+     * 유저활동 정지를 해제
+     * 
+     */
     @PostMapping("/users/{userId}/penalties/lift")
     public ResponseEntity<UserDetailResponseDto> liftPenaltyNow(@PathVariable String userId) {
         return ResponseEntity.ok(adminService.liftPenaltyNow(userId));

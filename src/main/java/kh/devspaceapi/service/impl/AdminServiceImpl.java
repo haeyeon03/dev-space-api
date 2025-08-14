@@ -133,7 +133,7 @@ public class AdminServiceImpl implements AdminService {
         return new PageImpl<>(dtos, pageable, page.getTotalElements());
     }
 	
-	//
+	//최종적으로 유저정보 dto반환
     private UserListResponseDto toDto(Users u, boolean isBanned, LocalDateTime banEndAt) {
         return UserListResponseDto.builder()
                 .userId(u.getUserId())
@@ -169,7 +169,7 @@ public class AdminServiceImpl implements AdminService {
             banned = LocalDateTime.now().isBefore(banEndAt);
             banReason = p.getReason();
         }
-
+        //가장 최근 받은 패널티를 포함한 유저정보 반환
         return UserDetailResponseDto.builder()
                 .userId(u.getUserId())
                 .nickname(u.getNickname())
@@ -184,23 +184,26 @@ public class AdminServiceImpl implements AdminService {
                 .build();
     }
     
+    //유저정보 수정(권한수정 "admin"or "user")
     @Override
 	@Transactional
 	public UserDetailResponseDto updateRole(String userId, UpdateRoleRequestDto req) {
+    	//권한 수정 "admin"or "user" 조건, 사이트 권한 세분화 할때 수정하는 위치
 		if (req.getRole() == null
 				|| !(req.getRole().equalsIgnoreCase("admin") || req.getRole().equalsIgnoreCase("user"))) {
 			throw new IllegalArgumentException("role은 'admin' 또는 'user'만 허용됩니다.");
 		}
-
+		
 		Users user = usersRepository.findById(userId)
 				.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
-
+		//UpdateRoleRequestDto를 통해 수정된 권한 저장
 		user.setRole(req.getRole().toLowerCase());
 		usersRepository.save(user);
-
+		//수정된 내용 전달을 위한 dto
 		return toDetailDto(user);
 	}
 
+    //유저 활동정지 (사유, 적용시간, 정지기간 입력은 필수)
 	@Override
 	@Transactional
 	public UserDetailResponseDto applyPenalty(String userId, ApplyPenaltyRequestDto req) {
@@ -225,10 +228,11 @@ public class AdminServiceImpl implements AdminService {
 		up.setDurationSec(req.getDurationSec());
 
 		userPenaltyRepository.save(up);
-
+		//수정된 내용 전달을 위한 dto
 		return toDetailDto(user);
 	}
-
+	
+	//잘못된 신고로인해 등록된 활동정지 해제
 	@Override
 	@Transactional
 	public UserDetailResponseDto liftPenaltyNow(String userId) {
@@ -250,7 +254,7 @@ public class AdminServiceImpl implements AdminService {
 				}
 			}
 		});
-
+		//수정된 내용 전달을 위한 dto
 		return toDetailDto(user);
 	}
 

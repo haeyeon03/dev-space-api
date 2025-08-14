@@ -35,7 +35,7 @@ public interface BoardPostService {
 
 	// 조회수 합계
 	public int getViewCountOf(Long postId);
-	// 댓글수 합계
 	
+	// 댓글수 합계
 	public int getCommentCountOf(Long postId);
 }

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import kh.devspaceapi.comm.response.PageResponse;
@@ -85,13 +86,19 @@ public class NewsPostController {
 	 * @return 페이징 처리된 댓글 목록
 	 */
 	@GetMapping("/{newsPostId}/comments")
-	public ResponseEntity<Page<PostCommentResponseDto>> getCommentsByNewsPostId(@PathVariable Long newsPostId,
-			PostCommentRequestDto request) {
+	public ResponseEntity<Page<PostCommentResponseDto>> getCommentsByNewsPostId(
+	        @PathVariable Long newsPostId,
+	        @RequestParam(defaultValue = "0") int curPage,
+	        @RequestParam(defaultValue = "10") int pageSize) {
 
-		Page<PostCommentResponseDto> comments = newsPostService.getCommentsByNewsPostId(newsPostId, request);
+	    PostCommentRequestDto request = new PostCommentRequestDto();
+	    request.setCurPage(curPage);
+	    request.setPageSize(pageSize);
 
-		return ResponseEntity.ok(comments);
+	    Page<PostCommentResponseDto> comments = newsPostService.getCommentsByNewsPostId(newsPostId, request);
+	    return ResponseEntity.ok(comments);
 	}
+
 
 	/**
 	 * 뉴스 게시글 댓글 등록

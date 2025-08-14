@@ -101,7 +101,7 @@ public class PostCommentServiceImpl implements PostCommentService {
 
 	@Override
 	public Page<PostCommentResponseDto> page(Long targetId, TargetType targetType, Pageable pageable) {
-		return postCommentRepository.findByTargetIdAndTargetTypeAndActiveTrue(targetId, targetType, pageable)
+		return postCommentRepository.findPostsByTargetIdAndTargetTypeAndActiveTrue(targetId, targetType, pageable)
 				.map(postCommentMapper::toDto);
 	}
 }

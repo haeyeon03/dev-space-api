@@ -1,6 +1,5 @@
 package kh.devspaceapi.repository;
 
-
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -17,6 +16,7 @@ public interface PostCommentRepository extends JpaRepository<PostComment, Long> 
 
 	List<PostComment> findByTargetIdAndTargetType(Long targetId, TargetType targetType);
 
-	Page<PostComment> findByTargetIdAndTargetTypeAndActiveTrue(Long targetId, TargetType targetType,
-																Pageable pageable);
+	Page<PostComment> findPostsByTargetIdAndTargetTypeAndActiveTrue(Long targetId, TargetType targetType, Pageable pageable);
+
+	Page<PostComment> findCommentsByTargetIdAndTargetTypeAndActiveTrue(Long newsPostId, TargetType news, Pageable pageable);
 }

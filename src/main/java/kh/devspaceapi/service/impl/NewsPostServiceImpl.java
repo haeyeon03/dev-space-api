@@ -104,7 +104,7 @@ public class NewsPostServiceImpl implements NewsPostService {
 	}
 
 	/**
-	 * 특정 뉴스 게시글에 달린 댓글을 페이징 처리하여 조회합니다.
+	 * 특정 뉴스 게시글에 달린 댓글을 페이징 처리하여 조회
 	 *
 	 * @param newsPostId 조회할 뉴스 게시글 ID
 	 * @param request    페이지 번호(page), 페이지 크기(size) 등의 페이징 요청 정보
@@ -119,17 +119,17 @@ public class NewsPostServiceImpl implements NewsPostService {
 		Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by("createdAt").descending());
 
 		// targetId와 targetType(뉴스 게시글) 기준으로 댓글을 페이징 조회
-//		Page<PostComment> commentPage = postCommentRepository.findByTargetIdAndTargetType(newsPostId, TargetType.NEWS,
-//				pageable);
+		Page<PostComment> commentPage = postCommentRepository.findCommentsByTargetIdAndTargetTypeAndActiveTrue(newsPostId,
+				TargetType.NEWS, pageable);
 
 		// 엔티티 → DTO 변환하여 반환
-//		return commentPage.map(postCommentMapper::toDto);
-		return null;
+		return commentPage.map(postCommentMapper::toDto);
+//		return null;
 	}
 
 	/**
-	 * 뉴스 게시글 및 해당 게시글에 달린 모든 댓글을 논리적으로 삭제 처리 (물리 삭제(DELETE) 대신 active 필드를 false로
-	 * 변경)
+	 * 뉴스 게시글 및 해당 게시글에 달린 모든 댓글을 논리적으로 삭제 처리
+	 * Active 필드를 false로 변경 하여 논리 삭제 처리
 	 *
 	 * @param newsPostId 조회할 뉴스 게시글의 고유 ID
 	 * @return 삭제 성공 시 1L, 실패 시 0L

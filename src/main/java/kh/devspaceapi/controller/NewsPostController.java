@@ -62,20 +62,6 @@ public class NewsPostController {
 	}
 
 	/**
-	 * 뉴스 게시글 상세 조회 API
-	 *
-	 * 특정 ID(newsPostId)를 가진 뉴스 게시글을 조회
-	 *
-	 * @param newsPostId 조회할 뉴스 게시글의 ID (Path Variable)
-	 * @return ResponseEntity<NewsPostResponseDto> 조회된 뉴스 게시글 데이터
-	 */
-//    @GetMapping("/{newsPostId}/comments")
-//    public ResponseEntity<List<CommentResponseDto>> getCommentsByNewsPostId(@PathVariable Long newsPostId) {
-//        List<CommentResponseDto> comments = commentService.getCommentsByNewsPostId(newsPostId);
-//        return ResponseEntity.ok(comments);
-//    }
-
-	/**
 	 * 뉴스 게시글 조회 후 삭제
 	 *
 	 * @param newsPostId 조회하여 뉴스 게시글 삭제 처리
@@ -91,8 +77,8 @@ public class NewsPostController {
 	/**
 	 * 뉴스 게시글 댓글 목록 조회 API
 	 *
-	 * 특정 뉴스 게시글(newsPostId)에 달린 댓글을 페이지 단위로 조회 요청 시 page, size, sort 등의 페이징 정보를 함께
-	 * 전달 가
+	 * 특정 뉴스 게시글(newsPostId)에 달린 댓글을 페이지 단위로 조회 요청 시
+	 * page, size, sort 등의 페이징 정보를 함께 전달 가능
 	 *
 	 * @param newsPostId 조회할 뉴스 게시글 ID
 	 * @param request    페이지 번호(page), 페이지 크기(size) 등의 페이징 요청 정보
@@ -107,22 +93,13 @@ public class NewsPostController {
 		return ResponseEntity.ok(comments);
 	}
 
-//	 // 댓글 목록
-//    @GetMapping("/{newsPostId}/comments")
-//    public ResponseEntity<Page<PostCommentResponseDto>> getNewsPostComments(
-//            @PathVariable Long newsPostId,
-//            Pageable pageable) {
-//
-//        Page<PostCommentResponseDto> comments = postCommentService.page(
-//            newsPostId,
-//            TargetType.NEWS,
-//            pageable
-//        );
-//
-//        return ResponseEntity.ok(comments);
-//    }
-	
-	// 댓글 등록
+	/**
+	 * 뉴스 게시글 댓글 등록
+	 *
+	 * @param newsPostId 댓글을 달 뉴스 게시글 ID
+	 * @param requestDto 댓글 내용 등을 담은 DTO
+	 * @return 등록된 댓글 정보를 담은 PostCommentResponseDto
+	 */
 	@PostMapping("/{newsPostId}/comments")
 	public ResponseEntity<PostCommentResponseDto> createNewsPostComment(@PathVariable Long newsPostId,
 			@RequestBody PostCommentRequestDto requestDto) {
@@ -134,7 +111,14 @@ public class NewsPostController {
 
 	}
 
-	// 댓글 수정
+	/**
+	 * 특정 뉴스 게시글 댓글 수정
+	 *
+	 * @param newsPostId 수정할 댓글이 속한 뉴스 게시글 ID
+	 * @param commentId  수정할 댓글 ID
+	 * @param requestDto 수정할 댓글 내용을 담은 DTO
+	 * @return 수정된 댓글 정보를 담은 PostCommentResponseDto
+	 */
 	@PutMapping("/{newsPostId}/comments/{commentId}")
 	public ResponseEntity<PostCommentResponseDto> updateNewsPostComment(@PathVariable Long newsPostId,
 			@PathVariable Long commentId, @RequestBody PostCommentRequestDto requestDto) {
@@ -145,7 +129,14 @@ public class NewsPostController {
 		return ResponseEntity.ok(updatedComment);
 	}
 
-	// 댓글 삭제
+	/**
+	 * 특정 뉴스 게시글 댓글 삭제
+	 * 논리 삭제(active=false)로 처리
+	 *
+	 * @param newsPostId 삭제할 댓글이 속한 뉴스 게시글 ID
+	 * @param commentId  삭제할 댓글 ID
+	 * @return 삭제 성공 시 HTTP 204 No Content
+	 */
 	@DeleteMapping("/{newsPostId}/comments/{commentId}")
 	public ResponseEntity<Void> deleteNewsPostComment(@PathVariable Long newsPostId, @PathVariable Long commentId) {
 

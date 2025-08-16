@@ -17,6 +17,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -31,17 +36,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 // CSRF 보호 비활성화 (REST API에서는 토큰으로 보호하므로 불필요)
                 .csrf(AbstractHttpConfigurer::disable)
                 // 세션을 생성하지 않음 → JWT 기반 무상태 인증 방식 사용
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // HTTP 요청에 대한 인가 규칙 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/error").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                        .requestMatchers("/api/admin/**").hasAnyAuthority("1")
+                                .requestMatchers("/api/tests/token").authenticated() // API 테스트용 추후 삭제
+                                .requestMatchers("/api/tests/**").permitAll() // API 테스트용 추후 삭제
+                                .requestMatchers("/api/auth/**", "/error").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                                .requestMatchers("/api/admin/**").hasAnyAuthority("1")
 //                        .requestMatchers("/api/admin/**").hasRole("ROLE_0") hasRole 은 접두사 "ROLE_" 이 붙음.
-                        .anyRequest().authenticated()
+                                .anyRequest().authenticated()
                 )
                 // JwtFilter 에서는 통과, 그 이후 Security 에서 발생하는 예외 처리
                 .exceptionHandling(ex -> ex
@@ -63,5 +71,19 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    // TODO. CORS 공부 필요.
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization", "Location"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
 
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 }

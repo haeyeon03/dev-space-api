@@ -23,12 +23,18 @@ import kh.devspaceapi.model.dto.admin.stats.AgeGenderDistributionResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.ApplyPenaltyRequestDto;
 import kh.devspaceapi.model.dto.admin.stats.DailyViewCountResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.GenderRatioResponseDto;
+import kh.devspaceapi.model.dto.admin.stats.ReportDetailDto;
+import kh.devspaceapi.model.dto.admin.stats.ReportListDto;
 import kh.devspaceapi.model.dto.admin.stats.SummaryResponseDto;
+import kh.devspaceapi.model.dto.admin.stats.UpdateReportStatusRequestDto;
 import kh.devspaceapi.model.dto.admin.stats.UpdateRoleRequestDto;
 import kh.devspaceapi.model.dto.admin.stats.UserDetailResponseDto;
 import kh.devspaceapi.model.dto.admin.stats.UserListResponseDto;
+import kh.devspaceapi.model.entity.enums.ReportStatus;
+import kh.devspaceapi.model.entity.enums.TargetType;
 import kh.devspaceapi.service.AdminService;
 import kh.devspaceapi.service.PostViewLogService;
+import kh.devspaceapi.service.ReportService;
 import lombok.RequiredArgsConstructor;
 
 @RequestMapping("/api/admins")
@@ -39,6 +45,8 @@ public class AdminController {
 	private AdminService adminService;
 	@Autowired
 	private PostViewLogService postViewLogService;
+	@Autowired
+	private ReportService reportService;
 
 	/*
 	 * 홈페이지에 등록된 유저 수, 컨텐츠 갯수 조회 API 회원가입 한 총 유저의 수, 게시된 뉴스의 수, 게시판에 올라간 게시글의 갯수,
@@ -159,4 +167,32 @@ public class AdminController {
     public ResponseEntity<UserDetailResponseDto> liftPenaltyNow(@PathVariable String userId) {
         return ResponseEntity.ok(adminService.liftPenaltyNow(userId));
     }
+    
+    /** 신고 리스트: 기본 status=PROCESSING, 타입/신고자 필터, 페이징 */
+    @GetMapping("/reports")
+    public ResponseEntity<Page<ReportListDto>> list(
+            @RequestParam(required = false) ReportStatus status,
+            @RequestParam(required = false) TargetType type,
+            @RequestParam(required = false) String reporterLike,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return ResponseEntity.ok(reportService.getReports(status, type, reporterLike, pageable));
+    }
+
+    /** 신고 상세 */
+    @GetMapping("/{reportId}")
+    public ResponseEntity<ReportDetailDto> detail(@PathVariable Long reportId) {
+        return ResponseEntity.ok(reportService.getReportDetail(reportId));
+    }
+
+    /** 처리상태 변경(처리중/처리완료) + 메모 */
+    @PatchMapping("/{reportId}/status")
+    public ResponseEntity<ReportDetailDto> updateStatus(
+            @PathVariable Long reportId,
+            @RequestParam String handlerUserId, // JWT에서 꺼내 쓸 수도 있음
+            @RequestBody UpdateReportStatusRequestDto req
+    ) {
+        return ResponseEntity.ok(reportService.updateReportStatus(reportId, handlerUserId, req));
+    }
+    
 }

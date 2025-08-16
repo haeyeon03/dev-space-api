@@ -33,7 +33,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
     private void writeErrorResponse(HttpServletResponse response, String code, String message) throws IOException {
         ApiResponse<Void> errorResponse = ApiResponse.error(HttpStatus.UNAUTHORIZED.value(), code, message);
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setStatus(HttpStatus.OK.value());
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(objectMapper.writeValueAsString(errorResponse));

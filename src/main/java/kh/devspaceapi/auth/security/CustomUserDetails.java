@@ -18,6 +18,7 @@ public class CustomUserDetails implements UserDetails {
     private String userId;
     private String password;
     private String nickname;
+    private String email;
     private String role;
 
     public CustomUserDetails(String userId, String role) {

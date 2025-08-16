@@ -35,6 +35,7 @@ public class AuthController {
 
         return ResponseEntity.ok(ApiResponse.success(AuthResponseDto.builder()
                 .nickname(user.getNickname())
+                .email(user.getEmail())
                 .role(user.getRole())
                 .accessToken(accessToken)
                 .build()

@@ -1,5 +1,6 @@
 package kh.devspaceapi.controller;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -8,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -85,10 +87,13 @@ public class AdminController {
 	 */
 	@GetMapping("/stats/daily-views")
 	public ResponseEntity<List<DailyViewCountResponseDto>> getDailyViewCount(
-			@RequestParam LocalDate startDate,
-			@RequestParam LocalDate endDate) {
+			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 		
-		return ResponseEntity.ok(postViewLogService.getDailyViewCountBetween(startDate, endDate));
+		Timestamp startTimestamp = Timestamp.valueOf(startDate.atStartOfDay());
+        Timestamp endTimestamp = Timestamp.valueOf(endDate.atTime(23, 59, 59));
+		
+		return ResponseEntity.ok(postViewLogService.getDailyViewCountBetween(startTimestamp, endTimestamp));
 	}
 
 	/*
@@ -97,11 +102,11 @@ public class AdminController {
 	 * @return 연령대, 성별, 조회수를 기간별로 지정하여 리턴해준다.
 	 */
 	@GetMapping("/stats/age-gender")
-	public ResponseEntity<List<AgeGenderDistributionResponseDto>> getAgeGenderDistribution(
+	public ResponseEntity<List<AgeGenderDistributionResponseDto>> getAgeGenderStats(
 			@RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
-		List<AgeGenderDistributionResponseDto> distribution = postViewLogService.getAgeGenderDistribution(startDate,
+		List<AgeGenderDistributionResponseDto> stats = postViewLogService.getAgeGenderStats(startDate,
 				endDate);
-		return ResponseEntity.ok(distribution);
+		return ResponseEntity.ok(stats);
 	}
 	
 	/**

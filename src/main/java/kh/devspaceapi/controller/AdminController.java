@@ -85,10 +85,10 @@ public class AdminController {
 	 */
 	@GetMapping("/stats/daily-views")
 	public ResponseEntity<List<DailyViewCountResponseDto>> getDailyViewCount(
-			@RequestParam LocalDate startTs,
-			@RequestParam LocalDate endTsExclusive) {
+			@RequestParam LocalDate startDate,
+			@RequestParam LocalDate endDate) {
 		
-		return ResponseEntity.ok(postViewLogService.getDailyViewCountBetween(startTs, endTsExclusive));
+		return ResponseEntity.ok(postViewLogService.getDailyViewCountBetween(startDate, endDate));
 	}
 
 	/*
@@ -157,7 +157,7 @@ public class AdminController {
         return ResponseEntity.ok(adminService.applyPenalty(userId, req));
     }
 
-    /* 정지 해제(즉시) 
+    /* 정지 해제(즉시)
      * 
      * 잘못된 신고등으로 인해 등록된
      * 유저활동 정지를 해제

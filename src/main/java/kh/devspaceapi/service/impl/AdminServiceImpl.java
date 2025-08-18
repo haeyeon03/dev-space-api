@@ -51,8 +51,8 @@ public class AdminServiceImpl implements AdminService {
 	public SummaryResponseDto getStatsSummary() {
 		long totalUsers = usersRepository.count();
 		long totalNewsPosts = newsPostRepository.count();
-		long totalComments = postCommentRepository.count();
 		long totalBoardPosts = boardPostRepository.count();
+		long totalComments = postCommentRepository.count();
 		// 각 repository에서 카운트 된 컨텐츠의 수를 리턴
 		return new SummaryResponseDto(totalUsers, totalNewsPosts, totalComments, totalBoardPosts);
 	}

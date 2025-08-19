@@ -48,7 +48,7 @@ public class UsersServiceImpl implements UsersService {
                 .nickname(request.getNickname())
                 .gender(request.getGender())
                 .birthdate(request.getBirthdate())
-                .role("1")
+                .role("USER")
                 .build()
         );
 

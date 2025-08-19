@@ -47,7 +47,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/tests/**").permitAll() // API 테스트용 추후 삭제
                                 .requestMatchers("/api/auth/**", "/error").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                                .requestMatchers("/api/admin/**").hasAnyAuthority("1")
+                                .requestMatchers("/api/admin/**").hasAnyAuthority("ADMIN")
 //                        .requestMatchers("/api/admin/**").hasRole("ROLE_0") hasRole 은 접두사 "ROLE_" 이 붙음.
                                 .anyRequest().authenticated()
                 )

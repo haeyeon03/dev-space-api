@@ -49,37 +49,42 @@ public class NewsPostServiceImpl implements NewsPostService {
 	@Override
 	public PageResponse<NewsPostResponseDto> getNewsPost(NewsPostRequestDto request) {
 
-		if (request.getCurPage() > 0) {
-			request.setCurPage(request.getCurPage() - 1);
-		}
-		Pageable pageable = PageRequest.of(request.getCurPage(), request.getPageSize(),
-				Sort.by(Sort.Direction.DESC, "updatedAt"));
 
-		Page<NewsPost> newsPostList = null;
+	    // 페이지 번호 0 기반 맞춤
+	    int curPage = request.getCurPage() > 0 ? request.getCurPage() - 1 : 0;
+	    int pageSize = request.getPageSize();
 
-		String title = request.getTitle();
-		String content = request.getContent();
+	    String title = request.getTitle();
+	    String content = request.getContent();
 
-		// 내용으로 검색
-		if ((title == null || title.isBlank()) && (content != null && !content.isBlank())) {
-			newsPostList = newsPostRepository.findAllByContentContainingAndActiveTrue(content, pageable);
-			// 제목으로 검색
-		} else if ((title != null && !title.isBlank()) && (content == null || content.isBlank())) {
-			newsPostList = newsPostRepository.findAllByTitleContainingAndActiveTrue(title, pageable);
-			// 제목 + 내용 검색
-		} else if ((title != null && !title.isBlank()) && (content != null && !content.isBlank())) {
-			newsPostList = newsPostRepository.findAllByTitleContainingAndContentContainingAndActiveTrue(title, content,
-					pageable);
-		} else {
-			// 전체 검색
-			newsPostList = newsPostRepository.findAllByActiveTrue(pageable);
-		}
+	    Page<NewsPost> newsPostPage;
 
-		// **Entity -> DTO 변환 (수동)**
-		Page<NewsPostResponseDto> dtoPage = newsPostList.map(newPostMapper::toDto);
+	    // 검색 조건에 따라 분기
+	    if ((title == null || title.isBlank()) && (content == null || content.isBlank())) {
+	        // 전체 검색
+	        Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
+	        newsPostPage = newsPostRepository.findAllByActiveTrue(pageable);
+	    } else if ((title != null && !title.isBlank()) && (content == null || content.isBlank())) {
+	        // 제목만 검색
+	        Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
+	        newsPostPage = newsPostRepository.findAllByTitleContainingAndActiveTrue(title, pageable);
+	    } else if ((title == null || title.isBlank()) && (content != null && !content.isBlank())) {
+	        // 내용만 검색
+	        Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
+	        newsPostPage = newsPostRepository.findAllByContentContainingAndActiveTrue(content, pageable);
+	    } else {
+	        // 제목 + 내용 OR 검색
+	        // 기존 findByTitleOrContentContaining가 Pageable 지원되므로 그대로 사용
+	        Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
+	        String keyword = title; // 프론트에서 searchText 동일하게 전달
+	        newsPostPage = newsPostRepository.findByTitleOrContentContaining(keyword, pageable);
+	    }
 
-		// PageResponse 생성자에 Page 넣어서 반환
-		return new PageResponse<>(dtoPage);
+	    // Entity -> DTO 변환
+	    Page<NewsPostResponseDto> dtoPage = newsPostPage.map(newPostMapper::toDto);
+
+	    // PageResponse 생성 후 반환
+	    return new PageResponse<>(dtoPage);
 	}
 
 	/**
@@ -119,8 +124,8 @@ public class NewsPostServiceImpl implements NewsPostService {
 		Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by("createdAt").descending());
 
 		// targetId와 targetType(뉴스 게시글) 기준으로 댓글을 페이징 조회
-		Page<PostComment> commentPage = postCommentRepository.findCommentsByTargetIdAndTargetTypeAndActiveTrue(newsPostId,
-				TargetType.NEWS, pageable);
+		Page<PostComment> commentPage = postCommentRepository
+				.findCommentsByTargetIdAndTargetTypeAndActiveTrue(newsPostId, TargetType.NEWS, pageable);
 
 		// 엔티티 → DTO 변환하여 반환
 		return commentPage.map(postCommentMapper::toDto);
@@ -128,8 +133,7 @@ public class NewsPostServiceImpl implements NewsPostService {
 	}
 
 	/**
-	 * 뉴스 게시글 및 해당 게시글에 달린 모든 댓글을 논리적으로 삭제 처리
-	 * Active 필드를 false로 변경 하여 논리 삭제 처리
+	 * 뉴스 게시글 및 해당 게시글에 달린 모든 댓글을 논리적으로 삭제 처리 Active 필드를 false로 변경 하여 논리 삭제 처리
 	 *
 	 * @param newsPostId 조회할 뉴스 게시글의 고유 ID
 	 * @return 삭제 성공 시 1L, 실패 시 0L

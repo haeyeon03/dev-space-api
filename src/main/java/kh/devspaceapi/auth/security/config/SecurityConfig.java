@@ -43,8 +43,6 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // HTTP 요청에 대한 인가 규칙 설정
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/api/tests/token").authenticated() // API 테스트용 추후 삭제
-                                .requestMatchers("/api/tests/**").permitAll() // API 테스트용 추후 삭제
                                 .requestMatchers("/api/auth/**", "/error").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                                 .requestMatchers("/api/admin/**").hasAnyAuthority("ADMIN")

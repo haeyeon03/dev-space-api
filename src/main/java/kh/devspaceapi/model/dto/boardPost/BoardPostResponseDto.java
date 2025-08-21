@@ -19,6 +19,7 @@ public class BoardPostResponseDto {
     private String category;
     private String content;
     private String userNickname;
+    private String authorId;
     private LocalDateTime createdAt;
     private int viewCount;
     private int commentCount;

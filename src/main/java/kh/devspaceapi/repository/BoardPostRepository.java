@@ -54,4 +54,6 @@ public interface BoardPostRepository extends JpaRepository<BoardPost, Long> {
 	@EntityGraph(attributePaths = "user")
 	Page<BoardPost> findByActiveTrueAndCategoryAndTitleContainingOrActiveTrueAndCategoryAndContentContaining(
 			String category1, String title, String category2, String content, Pageable pageable);
+	
+	Page<BoardPost> findByActiveTrueAndUser_UserId(String userId, Pageable pageable);
 }

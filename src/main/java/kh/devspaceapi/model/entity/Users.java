@@ -27,4 +27,6 @@ public class Users extends BaseEntity {
     private String email;
     private String role;
     private LocalDate birthdate;
+    @Column(name = "profile_image_url", length = 512)
+    private String profileImageUrl;
 }

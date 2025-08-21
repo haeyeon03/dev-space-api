@@ -15,6 +15,7 @@ public class PostCommentResponseDto {
     private String content;
     private Long targetId;
     private TargetType targetType;
-
+    
+    private String userNickname;
     private UsersResponseDto user;
 }

@@ -23,7 +23,11 @@ public interface PostCommentService {
      * @param content    댓글 내용
      * @return 생성된 댓글의 응답 DTO
      */
-    public PostCommentResponseDto create(Long targetId, TargetType targetType, Long userId, String content);
+    public PostCommentResponseDto create(Long targetId, TargetType targetType, String userId, String content);
+    
+    default PostCommentResponseDto create(Long targetId, TargetType targetType, Long userId, String content) {
+        return create(targetId, targetType, String.valueOf(userId), content);
+    }
 
     /**
      * 댓글 단건 조회 (ID 기준).

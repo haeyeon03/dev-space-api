@@ -30,4 +30,6 @@ public interface UsersRepository extends JpaRepository<Users, String> {
 	Page<Users> searchUsers(@Param("searchType") String searchType, @Param("keyword") String keyword, @Param("role") String role, Pageable pageable);
 
 	Optional<Users> findByUserId(String userId);
+	
+	boolean existsByEmail(String email);
 }

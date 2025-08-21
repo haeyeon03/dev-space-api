@@ -38,4 +38,7 @@ public interface BoardPostService {
 	
 	// 댓글수 합계
 	public int getCommentCountOf(Long postId);
+	
+    // 작성자 연결
+    public void insertByUser(BoardPost body, String userIdFromToken) throws Exception;
 }

@@ -16,6 +16,7 @@ import kh.devspaceapi.model.entity.enums.TargetType;
 import kh.devspaceapi.model.mapper.PostCommentMapper;
 import kh.devspaceapi.repository.PostCommentRepository;
 import kh.devspaceapi.repository.PostViewLogRepository;
+import kh.devspaceapi.repository.UsersRepository;
 import kh.devspaceapi.service.PostCommentService;
 import lombok.RequiredArgsConstructor;
 
@@ -26,19 +27,21 @@ public class PostCommentServiceImpl implements PostCommentService {
     private final PostCommentRepository postCommentRepository;
     private final PostViewLogRepository postViewLogRepository;
     private final PostCommentMapper postCommentMapper;
+    private final UsersRepository usersRepository;
 
     /**
      * 댓글 생성 후, 댓글 카운트(+1) 로그 적재
      */
     @Override
     @Transactional
-    public PostCommentResponseDto create(Long targetId, TargetType targetType, Long userId, String content) {
-        Users userRef = null;
+    public PostCommentResponseDto create(Long targetId, TargetType targetType, String userId, String content) {
+        Users userRef = usersRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("유저 없음: " + userId));
 
         PostComment c = new PostComment();
         c.setTargetId(targetId);
         c.setTargetType(targetType);
-        c.setUser(userRef);
+        c.setUser(userRef); // 작성자 연결
         c.setContent(content);
         c.setActive(true);
         c.setCreatedAt(LocalDateTime.now());
@@ -46,7 +49,7 @@ public class PostCommentServiceImpl implements PostCommentService {
 
         PostComment saved = postCommentRepository.save(c);
 
-        // 댓글 +1 집계 로그
+        // 댓글 +1 집계 로그 (PostViewLog.userId 타입에 맞게 — 현재 Users로 가정)
         postViewLogRepository.save(
             PostViewLog.builder()
                 .targetId(targetId)
@@ -60,7 +63,7 @@ public class PostCommentServiceImpl implements PostCommentService {
 
         return postCommentMapper.toDto(saved);
     }
-
+    
     /** 단건 조회 */
     @Override
     public PostCommentResponseDto get(Long commentId) {
@@ -122,6 +125,7 @@ public class PostCommentServiceImpl implements PostCommentService {
      * 특정 대상의 노출(active=true) 댓글 목록 페이징 조회
      */
     @Override
+    @Transactional(readOnly = true)
     public Page<PostCommentResponseDto> page(Long targetId, TargetType targetType, Pageable pageable) {
         return postCommentRepository
             .findPostsByTargetIdAndTargetTypeAndActiveTrue(targetId, targetType, pageable)

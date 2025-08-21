@@ -36,6 +36,11 @@ public class PostCommentMapper implements GenericMapper<PostCommentResponseDto, 
         if (entity.getUser() != null) {
             UsersResponseDto userDto = userMapper.toDto(entity.getUser());
             dto.setUser(userDto);
+            
+            dto.setUserNickname(entity.getUser().getNickname());
+        } else {
+            dto.setUser(null);
+            dto.setUserNickname(null);
         }
 
         return dto;

@@ -45,4 +45,13 @@ public class ApiResponse<T> {
         apiResponse.setMessage(message);
         return apiResponse;
     }
+
+    public static <T> ApiResponse<T> success(String code, T data) {
+        ApiResponse<T> apiResponse = new ApiResponse<>();
+        apiResponse.setStatus(HttpStatus.OK.value());
+        apiResponse.setCode(code);
+        apiResponse.setMessage("요청이 성공적으로 완료되었습니다.");
+        apiResponse.setData(data);
+        return apiResponse;
+    }
 }

@@ -45,6 +45,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                                 .requestMatchers("/api/auth/**", "/error").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/news-posts/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/board-posts/**").permitAll()
                                 .requestMatchers("/api/admin/**").hasAnyAuthority("ADMIN")
 //                        .requestMatchers("/api/admin/**").hasRole("ROLE_0") hasRole 은 접두사 "ROLE_" 이 붙음.
                                 .anyRequest().authenticated()

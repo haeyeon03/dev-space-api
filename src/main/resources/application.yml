@@ -55,6 +55,12 @@ logging:
 app:
   upload:
     profile-dir: uploads/profile
+
+jwt:
+  key: 2025-kh-dev-space-team-final-project-with-spring-boot
+  expiration:
+    access: 300000 # 5분
+    refresh: 86400000 # 24시간
 # H2 for Dev
 #  datasource:
 #    url: jdbc:h2:mem:testdb

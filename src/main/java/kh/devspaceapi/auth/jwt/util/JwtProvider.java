@@ -7,6 +7,7 @@ import jakarta.annotation.PostConstruct;
 import kh.devspaceapi.comm.exception.ErrorCode;
 import kh.devspaceapi.comm.exception.JwtException;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -16,7 +17,9 @@ import java.util.Date;
 @Log4j2
 @Component
 public class JwtProvider {
-    private String SECRET_KEY = "2025-kh-dev-space-team-final-project-with-spring-boot";
+    @Value("${jwt.key}")
+    private String SECRET_KEY;
+
     private Key key;
 
     @PostConstruct

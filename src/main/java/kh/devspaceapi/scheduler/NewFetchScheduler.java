@@ -14,9 +14,9 @@ import kh.devspaceapi.model.entity.NewsPost;
 import kh.devspaceapi.repository.NewsPostRepository;
 
 import lombok.RequiredArgsConstructor;
-
 import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
+import org.jsoup.parser.Parser;
 import org.jsoup.nodes.Document;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -43,9 +43,9 @@ public class NewFetchScheduler {
     public void fetchDailyNews() {
         log.info("[Scheduler] 뉴스 스케줄러 시작");
 
-        for (String Keyword : props.getKeywords()) {
-            log.info("[Scheduler] Keyword: {}", Keyword);
-            String responseBody = newsNewsApiClient.fetchNews(Keyword);
+        for (String keyword : props.getKeywords()) {
+            log.info("[Scheduler] Keyword: {}", keyword);
+            String responseBody = newsNewsApiClient.fetchNews(keyword);
 
             NaverNewsApiResponseDto newsResponse;
             try {
@@ -63,26 +63,22 @@ public class NewFetchScheduler {
                 }
 
                 try {
+                    ContentResult contentResult = null;
+
                     if (item.getLink().contains(NewsSiteSelector.NAVER_SELECTOR.getDomain())) {
                         Document doc = Jsoup.connect(item.getLink()).get();
-                        ContentResult contentResult = naverNewsFetcher.fetchContent(doc);
-                        if (contentResult == null || !StringUtils.hasText(contentResult.getContentText())) {
-                            continue;
-                        }
-
-                        NewsPost entity = buildNewsPost(item, contentResult);
-                        entityList.add(entity);
+                        contentResult = naverNewsFetcher.fetchContent(doc);
                     } else if (item.getLink().contains(NewsSiteSelector.AI_TIMES_SELECTOR.getDomain())) {
                         Document doc = Jsoup.connect(item.getLink()).get();
-                        ContentResult contentResult = aiTimesNewsFetcher.fetchContent(doc);
-                        if (contentResult == null || !StringUtils.hasText(contentResult.getContentText())) {
-                            continue;
-                        }
-
-                        NewsPost entity = buildNewsPost(item, contentResult);
-                        entityList.add(entity);
+                        contentResult = aiTimesNewsFetcher.fetchContent(doc);
                     }
 
+                    if (contentResult == null || !StringUtils.hasText(contentResult.getContentText())) {
+                        continue;
+                    }
+
+                    NewsPost entity = buildNewsPost(item, contentResult);
+                    entityList.add(entity);
 
                 } catch (Exception e) {
                     log.warn("[Scheduler] 본문 크롤링 실패 URL: {}", item.getLink(), e);
@@ -108,8 +104,11 @@ public class NewFetchScheduler {
 
     private NewsPost buildNewsPost(NaverNewsApiItem item, ContentResult contentResult) {
         NewsPost entity = new NewsPost();
-        entity.setTitle(item.getTitle());
-        entity.setContent(contentResult.getContentText());
+
+        // 제목과 본문 HTML 태그 제거 + 엔티티 변환
+        entity.setTitle(cleanHtml(item.getTitle()));
+        entity.setContent(cleanHtml(contentResult.getContentText()));
+
         entity.setUrl(item.getLink());
 
         if (contentResult.getImageUrls() != null && !contentResult.getImageUrls().isEmpty()) {
@@ -122,11 +121,20 @@ public class NewFetchScheduler {
         return entity;
     }
 
+    /**
+     * HTML 태그 제거 + HTML 엔티티(&quot; 등) 변환
+     */
+    private String cleanHtml(String html) {
+        if (html == null) return null;
+        String textOnly = Jsoup.parse(html).text(); // HTML 태그 제거
+        return Parser.unescapeEntities(textOnly, true); // HTML 엔티티 변환
+    }
+
     private void upsertNewsPost(NewsPost entity) {
         NewsPost existing = newsPostRepository.findByUrl(entity.getUrl());
 
         if (existing != null) {
-            // 기존 엔티티 업데이트할 필드들
+            // 기존 엔티티 업데이트
             existing.setTitle(entity.getTitle());
             existing.setContent(entity.getContent());
             existing.setImageUrl(entity.getImageUrl());

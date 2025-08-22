@@ -1,14 +1,21 @@
 package kh.devspaceapi.service.impl;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import jakarta.persistence.EntityNotFoundException;
 import kh.devspaceapi.comm.exception.BusinessException;
@@ -41,137 +48,157 @@ public class NewsPostServiceImpl implements NewsPostService {
 	private final PostCommentService postCommentService;
 
 	/**
-	 * 뉴스 게시글 검색어 설정 후 조회 API 전체(검색어 설정을 안 했을 경우) 내용으로 검색 제목으로 검색 내용+전체로 검색
+	 * 뉴스 게시글 검색 조건에 따라 페이지 단위로 조회
 	 *
-	 * @return NewsPostResponseDto데이터 들이 페이지 단위로 끊긴 게시글 응답(active = true)
-	 * @throws EntityNotFoundException 해당 제목 / 내용에 따른 뉴스 게시글이 없을 경우 발생
+	 * 검색어(title, content)에 따라 전체, 제목, 내용, 제목+내용 조건 분기
+	 * 게시글은 active=true인 것만 조회
+	 *
+	 * @param request 검색 조건과 페이지 정보를 포함한 DTO
+	 * @return PageResponse<NewsPostResponseDto> : 페이징된 뉴스 게시글 리스트
+	 * @throws EntityNotFoundException 검색 결과가 없을 경우
 	 */
 	@Override
 	public PageResponse<NewsPostResponseDto> getNewsPost(NewsPostRequestDto request) {
 
+		// 페이지 번호 0 기반 맞춤
+		int curPage = request.getCurPage() > 0 ? request.getCurPage() - 1 : 0;
+		int pageSize = request.getPageSize();
 
-	    // 페이지 번호 0 기반 맞춤
-	    int curPage = request.getCurPage() > 0 ? request.getCurPage() - 1 : 0;
-	    int pageSize = request.getPageSize();
+		String title = request.getTitle();
+		String content = request.getContent();
 
-	    String title = request.getTitle();
-	    String content = request.getContent();
+		Page<NewsPost> newsPostPage;
 
-	    Page<NewsPost> newsPostPage;
+		// 검색 조건에 따라 분기
+		if ((title == null || title.isBlank()) && (content == null || content.isBlank())) {
+			// 전체 조회
+			Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
+			newsPostPage = newsPostRepository.findAllByActiveTrue(pageable);
+		} else if ((title != null && !title.isBlank()) && (content == null || content.isBlank())) {
+			// 제목만 검색
+			Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
+			newsPostPage = newsPostRepository.findAllByTitleContainingAndActiveTrue(title, pageable);
+		} else if ((title == null || title.isBlank()) && (content != null && !content.isBlank())) {
+			// 내용만 검색
+			Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
+			newsPostPage = newsPostRepository.findAllByContentContainingAndActiveTrue(content, pageable);
+		} else {
+			// 제목 + 내용 OR 검색
+			Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
+			String keyword = title; // 프론트에서 searchText 동일하게 전달
+			newsPostPage = newsPostRepository.findByTitleOrContentContaining(keyword, pageable);
+		}
 
-	    // 검색 조건에 따라 분기
-	    if ((title == null || title.isBlank()) && (content == null || content.isBlank())) {
-	        // 전체 검색
-	        Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
-	        newsPostPage = newsPostRepository.findAllByActiveTrue(pageable);
-	    } else if ((title != null && !title.isBlank()) && (content == null || content.isBlank())) {
-	        // 제목만 검색
-	        Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
-	        newsPostPage = newsPostRepository.findAllByTitleContainingAndActiveTrue(title, pageable);
-	    } else if ((title == null || title.isBlank()) && (content != null && !content.isBlank())) {
-	        // 내용만 검색
-	        Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
-	        newsPostPage = newsPostRepository.findAllByContentContainingAndActiveTrue(content, pageable);
-	    } else {
-	        // 제목 + 내용 OR 검색
-	        // 기존 findByTitleOrContentContaining가 Pageable 지원되므로 그대로 사용
-	        Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
-	        String keyword = title; // 프론트에서 searchText 동일하게 전달
-	        newsPostPage = newsPostRepository.findByTitleOrContentContaining(keyword, pageable);
-	    }
+		// 엔티티 -> DTO 변환
+		Page<NewsPostResponseDto> dtoPage = newsPostPage.map(newPostMapper::toDto);
 
-	    // Entity -> DTO 변환
-	    Page<NewsPostResponseDto> dtoPage = newsPostPage.map(newPostMapper::toDto);
-
-	    // PageResponse 생성 후 반환
-	    return new PageResponse<>(dtoPage);
+		// PageResponse로 감싸서 반환
+		return new PageResponse<>(dtoPage);
 	}
 
 	/**
-	 * 지정한 뉴스 게시글 ID에 해당하는 뉴스 게시글과 관련된 댓글, 좋아요 정보를 조회
+	 * 단건 뉴스 게시글 조회
 	 *
-	 * @param newsPostId 조회할 뉴스 게시글의 고유 ID
-	 * @return NewsPostResponseDto 뉴스 게시글 정보와 댓글 리스트, 좋아요 리스트를 포함한 응답 DTO 객체
-	 * @throws BusinessException 해당 ID의 뉴스 게시글이 없거나 비활성화된 경우 발생
+	 * @param newsPostId 조회할 뉴스 게시글 ID
+	 * @return NewsPostResponseDto 뉴스 게시글 상세 정보
+	 * @throws BusinessException 해당 게시글이 없거나 비활성화된 경우
 	 */
 	@Override
 	public NewsPostResponseDto getNewsPostById(Long newsPostId) {
 		NewsPost newsPost = newsPostRepository.findByNewsPostIdAndActiveTrue(newsPostId)
 				.orElseThrow(() -> new BusinessException(ErrorCode.NO_EXIST_NEWS_POST));
-		// newsPost -> NewsPostResponseDto 변환
+
+		// 엔티티 -> DTO 변환
 		NewsPostResponseDto newsPostDto = newPostMapper.toDto(newsPost);
 
-		// postLike 도 같은 방식으로 조회
-		// postLike -> PostLikeResponseDto 변환
-		// NewsPostResponseDto.setPostLikes(comments);
-
+		// TODO: 댓글, 좋아요 등 관련 데이터 DTO에 포함 가능
 		return newsPostDto;
 	}
 
 	/**
-	 * 특정 뉴스 게시글에 달린 댓글을 페이징 처리하여 조회
+	 * 뉴스 게시글에 달린 댓글 조회 (페이징)
 	 *
-	 * @param newsPostId 조회할 뉴스 게시글 ID
-	 * @param request    페이지 번호(page), 페이지 크기(size) 등의 페이징 요청 정보
-	 * @return 페이징 처리된 댓글 DTO 목록
+	 * @param newsPostId 뉴스 게시글 ID
+	 * @param request    페이지 번호, 크기 등의 요청 정보
+	 * @return Page<PostCommentResponseDto> : 페이징된 댓글 리스트
 	 */
 	@Override
 	public Page<PostCommentResponseDto> getCommentsByNewsPostId(Long newsPostId, PostCommentRequestDto request) {
 		int curPage = request.getCurPage() > 0 ? request.getCurPage() - 1 : 0;
 		int pageSize = request.getPageSize() > 0 ? request.getPageSize() : 10;
 
-		// 페이징 및 정렬 조건 설정 (생성일자 기준 내림차순)
 		Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by("createdAt").descending());
 
-		// targetId와 targetType(뉴스 게시글) 기준으로 댓글을 페이징 조회
+		// targetId(newsPostId)와 targetType(NEWS) 기준으로 댓글 조회
 		Page<PostComment> commentPage = postCommentRepository
 				.findCommentsByTargetIdAndTargetTypeAndActiveTrue(newsPostId, TargetType.NEWS, pageable);
 
-		// 엔티티 → DTO 변환하여 반환
+		// 엔티티 -> DTO 변환 후 반환
 		return commentPage.map(postCommentMapper::toDto);
-//		return null;
 	}
 
 	/**
-	 * 뉴스 게시글 및 해당 게시글에 달린 모든 댓글을 논리적으로 삭제 처리 Active 필드를 false로 변경 하여 논리 삭제 처리
+	 * 뉴스 게시글에 댓글 추가
 	 *
-	 * @param newsPostId 조회할 뉴스 게시글의 고유 ID
-	 * @return 삭제 성공 시 1L, 실패 시 0L
-	 * @throws IllegalArgumentException 해당 ID의 뉴스 게시글이 존재하지 않을 경우 발생
+	 * @param newsPostId 뉴스 게시글 ID
+	 * @param body       요청 바디에서 content 추출
+	 * @return PostCommentResponseDto : 생성된 댓글 DTO
+	 */
+	@PostMapping("/{newsPostId}/comments")
+	public ResponseEntity<PostCommentResponseDto> addComment(@PathVariable Long newsPostId,
+			@RequestBody Map<String, String> body) {
+		String content = body.get("content");
+
+		// 현재 로그인된 사용자 ID 가져오기 (JWT subject)
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		String userId = authentication.getName();
+
+		PostCommentResponseDto dto = postCommentService.create(newsPostId, TargetType.NEWS, userId, content);
+
+		return ResponseEntity.ok(dto);
+	}
+
+	/**
+	 * 뉴스 게시글과 해당 게시글의 모든 댓글 논리 삭제
+	 *
+	 * active 필드를 false로 변경하여 삭제 처리
+	 *
+	 * @param newsPostId 삭제할 뉴스 게시글 ID
+	 * @return 1L 성공, 0L 실패
+	 * @throws IllegalArgumentException 뉴스 게시글이 존재하지 않을 경우
 	 */
 	@Override
 	@Transactional
 	public Long deleteNewsPost(Long newsPostId) {
 		try {
 			// 1) 뉴스 게시글 존재 여부 확인
-			// 존재하지 않으면 IllegalArgumentException 발생
 			NewsPost newsPost = newsPostRepository.findById(newsPostId)
 					.orElseThrow(() -> new IllegalArgumentException("해당 뉴스 게시글이 존재하지 않습니다."));
 
-			// 2) 해당 게시글에 달린 모든 댓글 조회 (TargetType.NEWS)
-			// 댓글도 논리 삭제(active=false)
+			// 2) 해당 게시글에 달린 모든 댓글 조회 후 논리 삭제(active=false)
 			List<PostComment> comments = postCommentRepository.findByTargetIdAndTargetType(newsPostId, TargetType.NEWS);
 			for (PostComment comment : comments) {
 				comment.setActive(false);
 			}
 			postCommentRepository.saveAll(comments);
 
-			// 3) 뉴스 게시글 논리 삭제 처리
+			// 3) 뉴스 게시글 논리 삭제
 			newsPost.setActive(false);
 			newsPostRepository.save(newsPost);
 
-			return 1L; // 성공 시 1 반환
+			return 1L;
 
 		} catch (DataIntegrityViolationException e) {
-			// DB 제약 조건 위반 시 (예: FK 제약, null 값 불가 등)
+			// DB 제약 조건 위반 시
+			log.error("DB 제약 조건 위반: {}", e.getMessage());
 		} catch (IllegalArgumentException e) {
-			// 존재하지 않는 뉴스 게시글 ID일 경우
-			throw e; // 이 경우는 0L 반환 대신 예외를 컨트롤러로 던짐
+			// 존재하지 않는 뉴스 게시글
+			throw e;
 		} catch (Exception e) {
-			// 알 수 없는 예외 처리
+			// 기타 알 수 없는 예외
+			log.error("뉴스 게시글 삭제 중 오류: {}", e.getMessage());
 		}
 
-		// 예외가 발생해서 try 블록을 정상적으로 마치지 못한 경우 0 반환 (실패)
-		return 0L;
+		return 0L; // 실패 시 0 반환
 	}
 }

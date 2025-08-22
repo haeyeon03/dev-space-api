@@ -46,7 +46,7 @@ public interface PostCommentService {
      * @return 수정된 댓글의 응답 DTO
      * @throws IllegalArgumentException 대상/타입 불일치 또는 댓글 없음
      */
-    public PostCommentResponseDto update(Long targetId, TargetType targetType, Long commentId, String content);
+    PostCommentResponseDto update(Long targetId, TargetType targetType, Long commentId, String content, String userId);
 
     /**
      * 댓글 삭제(소프트 삭제 권장: active=false).
@@ -55,7 +55,6 @@ public interface PostCommentService {
      * @param commentId  삭제할 댓글 PK
      * @throws IllegalArgumentException 대상/타입 불일치 또는 댓글 없음
      */
-    public void delete(Long targetId, TargetType targetType, Long commentId);
 
     /**
      * 댓글 페이지 조회 (active=true 만 노출).
@@ -66,5 +65,14 @@ public interface PostCommentService {
      * @return 댓글 페이지 DTO (active=true만)
      */
     public Page<PostCommentResponseDto> page(Long targetId, TargetType targetType, Pageable pageable);
+
+	/**
+	 * 댓글 내용 수정 path의 게시글(targetId/type)에 해당 댓글의 속하는지 확인
+	 */
+
+	/**
+	 * 댓글 삭제(소프트 삭제) active=false로 전환 집계 로그에 댓글 카운트(-1) 기록
+	 */
+	void delete(Long targetId, TargetType targetType, Long commentId, String userId);
 
 }

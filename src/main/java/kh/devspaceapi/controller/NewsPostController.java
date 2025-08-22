@@ -1,8 +1,14 @@
 package kh.devspaceapi.controller;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -17,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 import kh.devspaceapi.comm.response.PageResponse;
 import kh.devspaceapi.model.dto.newsPost.NewsPostRequestDto;
 import kh.devspaceapi.model.dto.newsPost.NewsPostResponseDto;
-import kh.devspaceapi.model.dto.postComment.PostCommentRequestDto;
 import kh.devspaceapi.model.dto.postComment.PostCommentResponseDto;
 import kh.devspaceapi.model.entity.enums.TargetType;
 import kh.devspaceapi.service.NewsPostService;
@@ -25,6 +30,11 @@ import kh.devspaceapi.service.PostCommentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * 뉴스 게시글과 관련된 API를 처리하는 컨트롤러
+ * 뉴스 게시글 조회, 단건 조회, 삭제
+ * 뉴스 게시글 댓글 CRUD 및 페이징
+ */
 @RequestMapping("/api/news-posts")
 @RestController
 @Slf4j
@@ -37,11 +47,12 @@ public class NewsPostController {
 	private PostCommentService postCommentService;
 
 	/**
-	 * 뉴스 게시글 검색어 설정 후 조회 API
-	 *
-	 * 전체(검색어 설정을 안 했을 경우) 내용으로 검색 제목으로 검색 내용+전체로 검색
-	 *
-	 * @ModelAttribute = 데이터 바인딩 + 모델 자동 등록, model.addAttribute()를 안 써도 됨 → 코드 깔끔
+     * 뉴스 게시글 목록 조회 API
+     * 검색어 조건이 있을 경우 제목/내용/전체 검색 가능
+     * @ModelAttribute 사용 → DTO에 자동 바인딩 + Model에 자동 등록
+     *
+     * @param request NewsPostRequestDto 검색 조건 DTO
+     * @return PageResponse<NewsPostResponseDto> 페이징된 뉴스 게시글 리스트
 	 */
 	@GetMapping("/")
 	public ResponseEntity<PageResponse<NewsPostResponseDto>> getNewsPost(@ModelAttribute NewsPostRequestDto request) {
@@ -75,79 +86,77 @@ public class NewsPostController {
 
 	}
 
-	/**
-	 * 뉴스 게시글 댓글 목록 조회 API
-	 *
-	 * 특정 뉴스 게시글(newsPostId)에 달린 댓글을 페이지 단위로 조회 요청 시
-	 * page, size, sort 등의 페이징 정보를 함께 전달 가능
-	 *
-	 * @param newsPostId 조회할 뉴스 게시글 ID
-	 * @param request    페이지 번호(page), 페이지 크기(size) 등의 페이징 요청 정보
-	 * @return 페이징 처리된 댓글 목록
-	 */
-	@GetMapping("/{newsPostId}/comments")
-	public ResponseEntity<Page<PostCommentResponseDto>> getCommentsByNewsPostId(
-	        @PathVariable Long newsPostId,
-	        @RequestParam(defaultValue = "0") int curPage,
-	        @RequestParam(defaultValue = "10") int pageSize) {
-
-	    PostCommentRequestDto request = new PostCommentRequestDto();
-	    request.setCurPage(curPage);
-	    request.setPageSize(pageSize);
-
-	    Page<PostCommentResponseDto> comments = newsPostService.getCommentsByNewsPostId(newsPostId, request);
-	    return ResponseEntity.ok(comments);
-	}
-
-
-	/**
-	 * 뉴스 게시글 댓글 등록
-	 *
-	 * @param newsPostId 댓글을 달 뉴스 게시글 ID
-	 * @param requestDto 댓글 내용 등을 담은 DTO
-	 * @return 등록된 댓글 정보를 담은 PostCommentResponseDto
-	 */
+	 /**
+     * 댓글 등록 API
+     *
+     * @param newsPostId 댓글을 등록할 뉴스 게시글 ID
+     * @param body JSON body에서 "content" 추출
+     * @return PostCommentResponseDto 등록된 댓글 DTO
+     */
 	@PostMapping("/{newsPostId}/comments")
-	public ResponseEntity<PostCommentResponseDto> createNewsPostComment(@PathVariable Long newsPostId,
-			@RequestBody PostCommentRequestDto requestDto) {
+	public ResponseEntity<PostCommentResponseDto> addComment(@PathVariable Long newsPostId,
+			@RequestBody Map<String, String> body) {
+		String content = body.get("content");
 
-		PostCommentResponseDto created = postCommentService.create(newsPostId, TargetType.NEWS, // 뉴스 게시판 타입
-				requestDto.getTargetId(), requestDto.getContent());
+		// 🔑 JWT의 userId 꺼내기
+		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 
-		return ResponseEntity.ok(created);
+		PostCommentResponseDto dto = postCommentService.create(newsPostId, TargetType.NEWS, userId, content);
 
+		return ResponseEntity.ok(dto);
 	}
 
 	/**
-	 * 특정 뉴스 게시글 댓글 수정
-	 *
-	 * @param newsPostId 수정할 댓글이 속한 뉴스 게시글 ID
-	 * @param commentId  수정할 댓글 ID
-	 * @param requestDto 수정할 댓글 내용을 담은 DTO
-	 * @return 수정된 댓글 정보를 담은 PostCommentResponseDto
-	 */
+     * 댓글 페이징 조회 API
+     *
+     * @param newsPostId 댓글을 조회할 뉴스 게시글 ID
+     * @param curPage 요청 페이지 번호, 기본값 0
+     * @param pageSize 페이지당 댓글 수, 기본값 10
+     * @return Page<PostCommentResponseDto> 페이징된 댓글 리스트
+     */
+	@GetMapping("/{newsPostId}/comments")
+	public ResponseEntity<Page<PostCommentResponseDto>> getComments(@PathVariable Long newsPostId,
+			@RequestParam(defaultValue = "0") int curPage, @RequestParam(defaultValue = "10") int pageSize) {
+		Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by("createdAt").descending());
+		Page<PostCommentResponseDto> page = postCommentService.page(newsPostId, TargetType.NEWS, pageable);
+		return ResponseEntity.ok(page);
+	}
+
+	 /**
+     * 댓글 수정 API
+     *
+     * @param newsPostId 댓글이 속한 뉴스 게시글 ID
+     * @param commentId 수정할 댓글 ID
+     * @param body JSON body에서 "content" 추출
+     * @return PostCommentResponseDto 수정된 댓글 DTO
+     */
 	@PutMapping("/{newsPostId}/comments/{commentId}")
-	public ResponseEntity<PostCommentResponseDto> updateNewsPostComment(@PathVariable Long newsPostId,
-			@PathVariable Long commentId, @RequestBody PostCommentRequestDto requestDto) {
+	public ResponseEntity<PostCommentResponseDto> updateComment(@PathVariable Long newsPostId,
+			@PathVariable Long commentId, @RequestBody Map<String, String> body) {
 
-		PostCommentResponseDto updatedComment = postCommentService.update(newsPostId, TargetType.NEWS, commentId,
-				requestDto.getContent());
+		String content = body.get("content");
 
-		return ResponseEntity.ok(updatedComment);
+		// JWT에서 userId 가져오기
+		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+		PostCommentResponseDto dto = postCommentService.update(newsPostId, TargetType.NEWS, commentId, content, userId);
+		return ResponseEntity.ok(dto);
 	}
 
-	/**
-	 * 특정 뉴스 게시글 댓글 삭제
-	 * 논리 삭제(active=false)로 처리
-	 *
-	 * @param newsPostId 삭제할 댓글이 속한 뉴스 게시글 ID
-	 * @param commentId  삭제할 댓글 ID
-	 * @return 삭제 성공 시 HTTP 204 No Content
-	 */
+	 /**
+     * 댓글 삭제 API
+     *
+     * @param newsPostId 댓글이 속한 뉴스 게시글 ID
+     * @param commentId 삭제할 댓글 ID
+     * @return ResponseEntity<Void> 삭제 완료 상태 반환
+     */
 	@DeleteMapping("/{newsPostId}/comments/{commentId}")
-	public ResponseEntity<Void> deleteNewsPostComment(@PathVariable Long newsPostId, @PathVariable Long commentId) {
+	public ResponseEntity<Void> deleteComment(@PathVariable Long newsPostId, @PathVariable Long commentId) {
 
-		postCommentService.delete(newsPostId, TargetType.NEWS, commentId);
+		// JWT에서 userId 가져오기
+		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+		postCommentService.delete(newsPostId, TargetType.NEWS, commentId, userId);
 		return ResponseEntity.noContent().build();
 	}
 

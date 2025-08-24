@@ -119,7 +119,7 @@ public class AdminServiceImpl implements AdminService {
                 })
                 // 6) role=banned 필터 요청 시 서비스단에서 최종 거르기
                 .filter(dto -> {
-                    if (role == null || role.isBlank() || role.equalsIgnoreCase("admin") || role.equalsIgnoreCase("user")) {
+                    if (role == null || role.isBlank() || role.equalsIgnoreCase("ADMIN") || role.equalsIgnoreCase("USER")) {
                         return true;
                     }
                     if (role.equalsIgnoreCase("banned")) {
@@ -175,7 +175,7 @@ public class AdminServiceImpl implements AdminService {
                 .nickname(u.getNickname())
                 .gender(u.getGender())
                 .role(u.getRole())
-                .admin("admin".equalsIgnoreCase(u.getRole()))
+                .admin("ADMIN".equalsIgnoreCase(u.getRole()))
                 .banned(banned)
                 .banReason(banReason)
                 .banEffectiveAt(banEffectiveAt)
@@ -190,7 +190,7 @@ public class AdminServiceImpl implements AdminService {
 	public UserDetailResponseDto updateRole(String userId, UpdateRoleRequestDto req) {
     	//권한 수정 "admin"or "user" 조건, 사이트 권한 세분화 할때 수정하는 위치
 		if (req.getRole() == null
-				|| !(req.getRole().equalsIgnoreCase("admin") || req.getRole().equalsIgnoreCase("user"))) {
+				|| !(req.getRole().equalsIgnoreCase("ADMIN") || req.getRole().equalsIgnoreCase("USER"))) {
 			throw new IllegalArgumentException("role은 'admin' 또는 'user'만 허용됩니다.");
 		}
 		

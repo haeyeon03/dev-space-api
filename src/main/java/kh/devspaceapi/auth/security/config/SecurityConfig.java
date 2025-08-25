@@ -1,6 +1,9 @@
 package kh.devspaceapi.auth.security.config;
 
 import kh.devspaceapi.auth.jwt.filter.JwtFilter;
+import kh.devspaceapi.auth.oauth2.handler.Oauth2LoginFailureHandler;
+import kh.devspaceapi.auth.oauth2.handler.Oauth2LoginSuccessHandler;
+import kh.devspaceapi.auth.oauth2.service.CustomOauth2UserService;
 import kh.devspaceapi.auth.security.handler.CustomAccessDeniedHandler;
 import kh.devspaceapi.auth.security.handler.CustomAuthenticationEntryPoint;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +35,13 @@ public class SecurityConfig {
     private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     @Autowired
     private CustomAccessDeniedHandler customAccessDeniedHandler;
+    @Autowired
+    private Oauth2LoginSuccessHandler oauth2LoginSuccessHandler;
+    @Autowired
+    private Oauth2LoginFailureHandler oauth2LoginFailureHandler;
+    @Autowired
+    private CustomOauth2UserService customOauth2UserService;
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -43,13 +53,26 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // HTTP 요청에 대한 인가 규칙 설정
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/api/auth/**", "/error").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/news-posts/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/board-posts/**").permitAll()
-                                .requestMatchers("/api/admin/**").hasAnyAuthority("ADMIN")
-//                        .requestMatchers("/api/admin/**").hasRole("ROLE_0") hasRole 은 접두사 "ROLE_" 이 붙음.
-                                .anyRequest().authenticated()
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/error",
+                                "/oauth2/**",
+                                "/login/**",
+                                "/signup/**",
+                                "/favicon.ico").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/news-posts/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/board-posts/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasAnyAuthority("ADMIN")
+                        .anyRequest().authenticated()
+                )
+                // Oauth2 인증
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> 
+                                userInfo.userService(customOauth2UserService)
+                        )
+                        .successHandler(oauth2LoginSuccessHandler)
+                        .failureHandler(oauth2LoginFailureHandler)
                 )
                 // JwtFilter 에서는 통과, 그 이후 Security 에서 발생하는 예외 처리
                 .exceptionHandling(ex -> ex

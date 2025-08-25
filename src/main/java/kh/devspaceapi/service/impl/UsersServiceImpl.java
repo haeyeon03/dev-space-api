@@ -48,6 +48,8 @@ public class UsersServiceImpl implements UsersService {
                 .nickname(request.getNickname())
                 .gender(request.getGender())
                 .birthdate(request.getBirthdate())
+                .email(request.getEmail())       // 추가
+                .provider(request.getProvider())
                 .role("USER")
                 .build()
         );

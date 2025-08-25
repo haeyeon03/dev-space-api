@@ -13,4 +13,6 @@ public class UsersRequestDto {
     private String nickname;
     private String gender;
     private LocalDate birthdate;
+    private String email;
+    private String provider;
 }

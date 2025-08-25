@@ -19,12 +19,24 @@ spring:
     generate-ddl: true
     show-sql: true
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 16983037515-c9548bkcb6gv383fd31g1s33ktgefkm7.apps.googleusercontent.com
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - profile
+              - email
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+
 api:
   naver:
     host: https://openapi.naver.com
     uri: /v1/search/news.json
     client-id: gMvuy5t65gjpfim29RXR
-    client-secret: ${CLIENT_SECRET} # 환경변수로 관리
+    client-secret: ${NAVER_CLIENT_SECRET} # 환경변수로 관리
     display: 100
     keywords:
       - "IT 통신"
@@ -59,8 +71,9 @@ app:
 jwt:
   key: 2025-kh-dev-space-team-final-project-with-spring-boot
   expiration:
-    access: 300000 # 5분
+    access: 600000 # 10분
     refresh: 86400000 # 24시간
+
 # H2 for Dev
 #  datasource:
 #    url: jdbc:h2:mem:testdb

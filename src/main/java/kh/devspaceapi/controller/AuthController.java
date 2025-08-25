@@ -5,9 +5,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import kh.devspaceapi.auth.jwt.util.JwtProvider;
 import kh.devspaceapi.auth.security.CustomUserDetails;
+import kh.devspaceapi.comm.exception.ErrorCode;
 import kh.devspaceapi.comm.exception.JwtException;
 import kh.devspaceapi.comm.response.ApiResponse;
 import kh.devspaceapi.comm.util.CookieUtil;
+import kh.devspaceapi.comm.util.OAuth2TempStore;
 import kh.devspaceapi.model.dto.auth.AuthRequestDto;
 import kh.devspaceapi.model.dto.auth.AuthResponseDto;
 import kh.devspaceapi.service.AuthService;
@@ -15,10 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/api/auth")
 @RestController
@@ -97,4 +98,39 @@ public class AuthController {
         CookieUtil.deleteCookie(response, "refreshToken");
         return ResponseEntity.ok(ApiResponse.success("LOGOUT_SUCCESS", null));
     }
+
+    @GetMapping("/authenticated/{key}")
+    public ResponseEntity<ApiResponse<AuthResponseDto>> getAuthenticatedUserInfo(
+            @PathVariable String key,
+            HttpServletResponse response
+    ) {
+        // 1. 키 존재 여부 확인
+        OAuth2TempStore.UserInfo userData = OAuth2TempStore.get(key);
+        if (userData == null) {
+            return ResponseEntity.status(HttpServletResponse.SC_UNAUTHORIZED)
+                    .body(ApiResponse.error(ErrorCode.AUTH_UNAUTHORIZED.getCode(), ErrorCode.AUTH_UNAUTHORIZED.getMessage()));
+        }
+
+        // 2. Access Token과 Refresh Token 생성
+        String accessToken = userData.getAccessToken();
+        String refreshToken = userData.getRefreshToken();
+
+        // 3. Refresh Token을 HttpOnly 쿠키로 설정
+        CookieUtil.addHttpOnlyCookie(response, "refreshToken", refreshToken);
+
+        // 4. 응답 DTO 생성 (Access Token만 반환, Refresh Token은 쿠키로 전송)
+        AuthResponseDto dto = AuthResponseDto.builder()
+                .nickname(userData.getNickname())
+                .email(userData.getEmail())
+                .role(userData.getRole())
+                .accessToken(accessToken)
+                .build();
+
+        // 5. 한 번 쓰고 제거
+        OAuth2TempStore.remove(key);
+
+        // 6. 응답 반환
+        return ResponseEntity.ok(ApiResponse.success(dto));
+    }
+
 }

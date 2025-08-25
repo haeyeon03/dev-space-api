@@ -24,7 +24,8 @@ public enum ErrorCode {
     JWT_UNKNOWN_ERROR("JWT005", "JWT 처리 중 알 수 없는 오류가 발생했습니다."),
 
     AUTH_UNAUTHORIZED("AUTH001", "인증되지 않은 요청입니다")
-    ;
+    ,
+    OAUTH2_KEY_NOT_FOUND("AUTH002", "OAuth2 임시 Key가 존재하지 않거나 만료되었습니다.");
 
 
     private final String code;

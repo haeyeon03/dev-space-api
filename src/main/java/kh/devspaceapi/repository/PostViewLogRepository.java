@@ -19,7 +19,7 @@ public interface PostViewLogRepository extends JpaRepository<PostViewLog, Long> 
 			@Param("endDate") Timestamp endDate);
 
 	@Query("""
-			SELECT 
+			SELECT
 			    CASE
 			        WHEN FLOOR(MONTHS_BETWEEN(CURRENT_DATE, u.birthdate) / 12) BETWEEN 10 AND 19 THEN '10대'
 			        WHEN FLOOR(MONTHS_BETWEEN(CURRENT_DATE, u.birthdate) / 12) BETWEEN 20 AND 29 THEN '20대'
@@ -33,7 +33,7 @@ public interface PostViewLogRepository extends JpaRepository<PostViewLog, Long> 
 			FROM PostViewLog p
 			JOIN p.userId u
 			WHERE p.viewDate BETWEEN :startDate AND :endDate
-			GROUP BY 
+			GROUP BY
 			    CASE
 			        WHEN FLOOR(MONTHS_BETWEEN(CURRENT_DATE, u.birthdate) / 12) BETWEEN 10 AND 19 THEN '10대'
 			        WHEN FLOOR(MONTHS_BETWEEN(CURRENT_DATE, u.birthdate) / 12) BETWEEN 20 AND 29 THEN '20대'
@@ -45,9 +45,15 @@ public interface PostViewLogRepository extends JpaRepository<PostViewLog, Long> 
 			    u.gender
 			ORDER BY ageGroup
 			""")
-	    List<Object[]> getAgeGenderStats(
-	            @Param("startDate") LocalDateTime startDate,
-	            @Param("endDate") LocalDateTime endDate
-	    );
+	List<Object[]> getAgeGenderStats(@Param("startDate") LocalDateTime startDate,
+			@Param("endDate") LocalDateTime endDate);
+
+	// 특정 게시물 누적 조회수
+	@Query("SELECT COALESCE(SUM(p.viewCount), 0) FROM PostViewLog p WHERE p.targetId = :postId AND p.targetType = 'NEWS'")
+	int getViewCountByPost(@Param("postId") Long postId);
+
+	// 특정 게시물 누적 댓글수
+	@Query("SELECT COALESCE(SUM(p.commentCount), 0) FROM PostViewLog p WHERE p.targetId = :postId AND p.targetType = 'NEWS'")
+	int getCommentCountByPost(@Param("postId") Long postId);
 
 }

@@ -1,5 +1,6 @@
 package kh.devspaceapi.service.impl;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
@@ -27,13 +28,17 @@ import kh.devspaceapi.model.dto.postComment.PostCommentRequestDto;
 import kh.devspaceapi.model.dto.postComment.PostCommentResponseDto;
 import kh.devspaceapi.model.entity.NewsPost;
 import kh.devspaceapi.model.entity.PostComment;
+import kh.devspaceapi.model.entity.PostViewLog;
+import kh.devspaceapi.model.entity.Users;
 import kh.devspaceapi.model.entity.enums.TargetType;
 import kh.devspaceapi.model.mapper.NewPostMapper;
 import kh.devspaceapi.model.mapper.PostCommentMapper;
 import kh.devspaceapi.repository.NewsPostRepository;
 import kh.devspaceapi.repository.PostCommentRepository;
+import kh.devspaceapi.repository.PostViewLogRepository;
 import kh.devspaceapi.service.NewsPostService;
 import kh.devspaceapi.service.PostCommentService;
+import kh.devspaceapi.service.UsersService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,11 +52,13 @@ public class NewsPostServiceImpl implements NewsPostService {
 	private final PostCommentMapper postCommentMapper;
 	private final PostCommentService postCommentService;
 
+	private final PostViewLogRepository postViewLogRepository;
+	private final UsersService usersService;
+
 	/**
 	 * 뉴스 게시글 검색 조건에 따라 페이지 단위로 조회
 	 *
-	 * 검색어(title, content)에 따라 전체, 제목, 내용, 제목+내용 조건 분기
-	 * 게시글은 active=true인 것만 조회
+	 * 검색어(title, content)에 따라 전체, 제목, 내용, 제목+내용 조건 분기 게시글은 active=true인 것만 조회
 	 *
 	 * @param request 검색 조건과 페이지 정보를 포함한 DTO
 	 * @return PageResponse<NewsPostResponseDto> : 페이징된 뉴스 게시글 리스트
@@ -90,9 +97,12 @@ public class NewsPostServiceImpl implements NewsPostService {
 		}
 
 		// 엔티티 -> DTO 변환
-		Page<NewsPostResponseDto> dtoPage = newsPostPage.map(newPostMapper::toDto);
+		Page<NewsPostResponseDto> dtoPage = newsPostPage.map(post -> {
+			int views = postViewLogRepository.getViewCountByPost(post.getNewsPostId());
+			int comments = postViewLogRepository.getCommentCountByPost(post.getNewsPostId());
+			return newPostMapper.toDto(post, views, comments);
+		});
 
-		// PageResponse로 감싸서 반환
 		return new PageResponse<>(dtoPage);
 	}
 
@@ -104,14 +114,36 @@ public class NewsPostServiceImpl implements NewsPostService {
 	 * @throws BusinessException 해당 게시글이 없거나 비활성화된 경우
 	 */
 	@Override
+	@Transactional
 	public NewsPostResponseDto getNewsPostById(Long newsPostId) {
+		// 1) 게시글 조회
 		NewsPost newsPost = newsPostRepository.findByNewsPostIdAndActiveTrue(newsPostId)
 				.orElseThrow(() -> new BusinessException(ErrorCode.NO_EXIST_NEWS_POST));
 
-		// 엔티티 -> DTO 변환
-		NewsPostResponseDto newsPostDto = newPostMapper.toDto(newsPost);
+		// 2) 로그인한 사용자 정보 가져오기 (없으면 null)
+		Users user = null;
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication != null && authentication.isAuthenticated()
+				&& !"anonymousUser".equals(authentication.getName())) {
+			// 로그인 되어 있으면 사용자 조회
+			String userId = authentication.getName();
+			user = usersService.findById(userId); // Users 객체 반환
+		}
 
-		// TODO: 댓글, 좋아요 등 관련 데이터 DTO에 포함 가능
+		// 3) 조회수 기록 (로그인 안 해도 user=null로 저장)
+		PostViewLog log = PostViewLog.builder().targetId(newsPostId).targetType(TargetType.NEWS).userId(user)
+				.viewDate(new Timestamp(System.currentTimeMillis())).viewCount(1).commentCount(0).build();
+		postViewLogRepository.save(log);
+
+		// 4) 누적 조회수, 댓글수 가져오기 (해당 게시글 기준)
+		int views = postViewLogRepository.getViewCountByPost(newsPostId);
+		int comments = postViewLogRepository.getCommentCountByPost(newsPostId);
+
+		// 5) DTO 변환
+		NewsPostResponseDto newsPostDto = NewsPostResponseDto.builder().newsPostId(newsPost.getNewsPostId())
+				.title(newsPost.getTitle()).content(newsPost.getContent()).imageUrl(newsPost.getImageUrl())
+				.pubDate(newsPost.getPubDate()).viewCount(views).commentCount(comments).build();
+
 		return newsPostDto;
 	}
 
@@ -201,4 +233,16 @@ public class NewsPostServiceImpl implements NewsPostService {
 
 		return 0L; // 실패 시 0 반환
 	}
+
+	public NewsPostResponseDto getNewsPost(Long id) {
+		NewsPost post = newsPostRepository.findById(id).orElseThrow(() -> new RuntimeException("게시글 없음"));
+
+		int views = postViewLogRepository.getViewCountByPost(id);
+		int comments = postViewLogRepository.getCommentCountByPost(id);
+
+		return NewsPostResponseDto.builder().newsPostId(post.getNewsPostId()).title(post.getTitle())
+				.content(post.getContent()).imageUrl(post.getImageUrl()).pubDate(post.getPubDate()).viewCount(views)
+				.commentCount(comments).build();
+	}
+
 }

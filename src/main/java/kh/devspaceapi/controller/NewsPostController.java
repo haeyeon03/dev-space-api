@@ -59,19 +59,21 @@ public class NewsPostController {
 		return ResponseEntity.ok(newsPostService.getNewsPost(request));
 	}
 
-	/**
-	 * 뉴스 게시글 단건 조회 API
-	 *
-	 * 특정 ID(newsPostId)를 가진 뉴스 게시글을 조회
-	 *
-	 * @param newsPostId 조회할 뉴스 게시글의 ID (Path Variable)
-	 * @return ResponseEntity<NewsPostResponseDto> 조회된 뉴스 게시글 데이터
-	 */
-	@GetMapping("/{newsPostId}")
-	public ResponseEntity<NewsPostResponseDto> getNewsPostById(@PathVariable Long newsPostId) {
-		NewsPostResponseDto newsPost = newsPostService.getNewsPostById(newsPostId);
-		return ResponseEntity.ok(newsPost);
-	}
+	 /**
+     * 뉴스 게시글 단건 조회 API
+     *
+     * 특정 ID(newsPostId)를 가진 뉴스 게시글을 조회
+     * 로그인 안 해도 조회수 증가
+     *
+     * @param newsPostId 조회할 뉴스 게시글 ID
+     * @return ResponseEntity<NewsPostResponseDto> 조회된 뉴스 게시글 데이터
+     */
+    @GetMapping("/{newsPostId}")
+    public ResponseEntity<NewsPostResponseDto> getNewsPostById(@PathVariable Long newsPostId) {
+        // 서비스에서 조회수 증가 + DTO 반환
+        NewsPostResponseDto newsPost = newsPostService.getNewsPostById(newsPostId);
+        return ResponseEntity.ok(newsPost);
+    }
 
 	/**
 	 * 뉴스 게시글 조회 후 삭제

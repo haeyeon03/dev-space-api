@@ -10,33 +10,40 @@ import java.util.List;
 public class NewPostMapper implements GenericMapper<NewsPostResponseDto, NewsPost> {
 //    @Autowired Modelmapper modelmapper;
 
-    @Override
-    public NewsPost toEntity(NewsPostResponseDto dto) {
+	@Override
+	public NewsPost toEntity(NewsPostResponseDto dto) {
 //        return modelmapper.map(dto, NewsPost.class);
-        return null;
-    }
+		return null;
+	}
 
-    // NewsPost → NewsPostResponseDto 변환 메서드
-    public NewsPostResponseDto toDto(NewsPost entity) {
-        NewsPostResponseDto dto = new NewsPostResponseDto();
-        dto.setNewsPostId(entity.getNewsPostId());
-        dto.setTitle(entity.getTitle());
-        dto.setContent(entity.getContent());
-        dto.setUpdatedAt(entity.getUpdatedAt());
-        dto.setCreatedAt(entity.getCreatedAt());
-        dto.setPubDate(entity.getPubDate());
-        dto.setImageUrl(entity.getImageUrl());
-        dto.setUrl(entity.getUrl());
-        return dto;
-    }
+	// NewsPost → NewsPostResponseDto 변환 메서드
+	public NewsPostResponseDto toDto(NewsPost entity) {
+		NewsPostResponseDto dto = new NewsPostResponseDto();
+		dto.setNewsPostId(entity.getNewsPostId());
+		dto.setTitle(entity.getTitle());
+		dto.setContent(entity.getContent());
+		dto.setUpdatedAt(entity.getUpdatedAt());
+		dto.setCreatedAt(entity.getCreatedAt());
+		dto.setPubDate(entity.getPubDate());
+		dto.setImageUrl(entity.getImageUrl());
+		dto.setUrl(entity.getUrl());
+		return dto;
+	}
 
-    @Override
-    public List<NewsPost> toEntityList(List<NewsPostResponseDto> dtoList) {
-        return List.of();
-    }
+	public NewsPostResponseDto toDto(NewsPost entity, int viewCount, int commentCount) {
+		NewsPostResponseDto dto = toDto(entity); // 기존 메서드 재사용
+		dto.setViewCount(viewCount);
+		dto.setCommentCount(commentCount);
+		return dto;
+	}
 
-    @Override
-    public List<NewsPostResponseDto> toDtoList(List<NewsPost> entityList) {
-        return List.of();
-    }
+	@Override
+	public List<NewsPost> toEntityList(List<NewsPostResponseDto> dtoList) {
+		return List.of();
+	}
+
+	@Override
+	public List<NewsPostResponseDto> toDtoList(List<NewsPost> entityList) {
+		return List.of();
+	}
 }

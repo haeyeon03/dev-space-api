@@ -55,4 +55,10 @@ public class UsersServiceImpl implements UsersService {
         );
 
     }
+
+	@Override
+	public Users findById(String userId) {
+        return usersRepository.findById(userId)
+                .orElse(null); // 또는 없으면 예외 던지기
+    }
 }

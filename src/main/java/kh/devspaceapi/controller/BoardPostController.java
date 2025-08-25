@@ -219,24 +219,24 @@ public class BoardPostController {
 	    return ResponseEntity.status(HttpStatus.CREATED).body(dto);
 	}
 
-	/**
-	 * 댓글 수정 - URL에 boardPostId, commentId 모두 필요 - 서비스 시그니처: update(targetId,
-	 * targetType, commentId, content)
-	 */
-	@PutMapping("/{boardPostId}/comments/{commentId}")
-	public PostCommentResponseDto updateComment(@PathVariable Long boardPostId, @PathVariable Long commentId,
-			@RequestBody CommentContent req) {
-		return postCommentService.update(boardPostId, TargetType.BOARD, commentId, req.content());
-	}
-
-	/**
-	 * 댓글 삭제(소프트 삭제) - active=false 로 변경(목록/조회에서 숨김) - 204 No Content
-	 */
-	@DeleteMapping("/{boardPostId}/comments/{commentId}")
-	public ResponseEntity<Void> deleteComment(@PathVariable Long boardPostId, @PathVariable Long commentId) {
-		postCommentService.delete(boardPostId, TargetType.BOARD, commentId);
-		return ResponseEntity.noContent().build();
-	}
+//	/**
+//	 * 댓글 수정 - URL에 boardPostId, commentId 모두 필요 - 서비스 시그니처: update(targetId,
+//	 * targetType, commentId, content)
+//	 */
+//	@PutMapping("/{boardPostId}/comments/{commentId}")
+//	public PostCommentResponseDto updateComment(@PathVariable Long boardPostId, @PathVariable Long commentId,
+//			@RequestBody CommentContent req) {
+//		return postCommentService.update(boardPostId, TargetType.BOARD, commentId, req.content());
+//	}
+//
+//	/**
+//	 * 댓글 삭제(소프트 삭제) - active=false 로 변경(목록/조회에서 숨김) - 204 No Content
+//	 */
+//	@DeleteMapping("/{boardPostId}/comments/{commentId}")
+//	public ResponseEntity<Void> deleteComment(@PathVariable Long boardPostId, @PathVariable Long commentId) {
+//		postCommentService.delete(boardPostId, TargetType.BOARD, commentId);
+//		return ResponseEntity.noContent().build();
+//	}
 
 	/**
 	 * 요청 바디(JSON)용 DTO - {"content":"내용"} 형태로 받기 위함

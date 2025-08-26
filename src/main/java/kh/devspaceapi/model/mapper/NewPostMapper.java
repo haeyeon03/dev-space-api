@@ -25,7 +25,7 @@ public class NewPostMapper implements GenericMapper<NewsPostResponseDto, NewsPos
 		dto.setUpdatedAt(entity.getUpdatedAt());
 		dto.setCreatedAt(entity.getCreatedAt());
 		dto.setPubDate(entity.getPubDate());
-		dto.setImageUrl(entity.getImageUrl());
+		dto.setImageUrls(entity.getImageUrls());
 		dto.setUrl(entity.getUrl());
 		return dto;
 	}

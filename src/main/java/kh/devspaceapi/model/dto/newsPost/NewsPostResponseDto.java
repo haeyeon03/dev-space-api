@@ -22,7 +22,7 @@ public class NewsPostResponseDto {
 	private LocalDateTime updatedAt;
 	private LocalDateTime createdAt;
 	private String url;
-	private String imageUrl;
+	private List<String> imageUrls;
 	private LocalDateTime pubDate;
 	private int viewCount;
 	private int commentCount;

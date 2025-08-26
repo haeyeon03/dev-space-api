@@ -141,7 +141,7 @@ public class NewsPostServiceImpl implements NewsPostService {
 
 		// 5) DTO 변환
 		NewsPostResponseDto newsPostDto = NewsPostResponseDto.builder().newsPostId(newsPost.getNewsPostId())
-				.title(newsPost.getTitle()).content(newsPost.getContent()).imageUrl(newsPost.getImageUrl())
+				.title(newsPost.getTitle()).content(newsPost.getContent()).imageUrls(newsPost.getImageUrls())
 				.pubDate(newsPost.getPubDate()).viewCount(views).commentCount(comments).build();
 
 		return newsPostDto;
@@ -241,7 +241,7 @@ public class NewsPostServiceImpl implements NewsPostService {
 		int comments = postViewLogRepository.getCommentCountByPost(id);
 
 		return NewsPostResponseDto.builder().newsPostId(post.getNewsPostId()).title(post.getTitle())
-				.content(post.getContent()).imageUrl(post.getImageUrl()).pubDate(post.getPubDate()).viewCount(views)
+				.content(post.getContent()).imageUrls(post.getImageUrls()).pubDate(post.getPubDate()).viewCount(views)
 				.commentCount(comments).build();
 	}
 

@@ -2,12 +2,12 @@ package kh.devspaceapi.model.entity;
 
 import jakarta.persistence.*;
 import kh.devspaceapi.model.entity.base.BaseEntity;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "NEWS_POST")
@@ -24,6 +24,9 @@ public class NewsPost extends BaseEntity {
     private String content;
     @Column(unique = true)
     private String url;
-    private String imageUrl;
+    @ElementCollection
+    @CollectionTable(name = "news_post_images", joinColumns = @JoinColumn(name = "news_post_id"))
+    @Column(name = "image_url")
+    private List<String> imageUrls;
     private LocalDateTime pubDate;
 }

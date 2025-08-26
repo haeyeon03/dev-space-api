@@ -16,7 +16,8 @@ public enum ErrorCode {
 
     DUPLICATED_USER("USER006", "이미 존재하는 User ID 입니다."),
     UNAUTHORIZED_USER("USER007", "사용자 인증을 실패하였습니다."),
-
+    MAIL_SEND_SUCCESS("USER008", "메일 전송 성공"),
+    MAIL_SEND_FAIL("USER009", "메일 전송 실패"),
     JWT_NOT_FOUND("JWT001", "토큰이 존재하지 않습니다."),
     JWT_EXPIRED("JWT002", "만료된 토큰입니다."),
     JWT_UNSUPPORTED("JWT003", "지원하지 않는 JWT 형식입니다."),

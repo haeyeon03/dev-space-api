@@ -112,9 +112,9 @@ public class NewFetchScheduler {
         entity.setUrl(item.getLink());
 
         if (contentResult.getImageUrls() != null && !contentResult.getImageUrls().isEmpty()) {
-            entity.setImageUrl(contentResult.getImageUrls().get(0));
-        } else {
-            entity.setImageUrl(null);
+            entity.setImageUrls(contentResult.getImageUrls());
+        }else {
+            entity.setImageUrls(null);
         }
 
         entity.setPubDate(item.getPubDate());
@@ -137,7 +137,7 @@ public class NewFetchScheduler {
             // 기존 엔티티 업데이트
             existing.setTitle(entity.getTitle());
             existing.setContent(entity.getContent());
-            existing.setImageUrl(entity.getImageUrl());
+            existing.setImageUrls(entity.getImageUrls());
             existing.setPubDate(entity.getPubDate());
 
             newsPostRepository.save(existing);

@@ -2,21 +2,16 @@ package kh.devspaceapi.service.impl;
 
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import jakarta.persistence.EntityNotFoundException;
 import kh.devspaceapi.comm.exception.BusinessException;
@@ -170,27 +165,6 @@ public class NewsPostServiceImpl implements NewsPostService {
 	}
 
 	/**
-	 * 뉴스 게시글에 댓글 추가
-	 *
-	 * @param newsPostId 뉴스 게시글 ID
-	 * @param body       요청 바디에서 content 추출
-	 * @return PostCommentResponseDto : 생성된 댓글 DTO
-	 */
-	@PostMapping("/{newsPostId}/comments")
-	public ResponseEntity<PostCommentResponseDto> addComment(@PathVariable Long newsPostId,
-			@RequestBody Map<String, String> body) {
-		String content = body.get("content");
-
-		// 현재 로그인된 사용자 ID 가져오기 (JWT subject)
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		String userId = authentication.getName();
-
-		PostCommentResponseDto dto = postCommentService.create(newsPostId, TargetType.NEWS, userId, content);
-
-		return ResponseEntity.ok(dto);
-	}
-
-	/**
 	 * 뉴스 게시글과 해당 게시글의 모든 댓글 논리 삭제
 	 *
 	 * active 필드를 false로 변경하여 삭제 처리
@@ -234,7 +208,16 @@ public class NewsPostServiceImpl implements NewsPostService {
 		return 0L; // 실패 시 0 반환
 	}
 
-	public NewsPostResponseDto getNewsPost(Long id) {
+	/**
+	 * 뉴스 게시글 단건 조회 (조회 기록 저장 X, 단순 댓글수 및 조회수 조회용)
+	 *
+	 * 클라이언트 화면에서 게시글 내용을 보여줄 때 사용되며, 게시글의 조회수와 댓글수를 함께 반환합니다.
+	 *
+	 * @param id 조회할 뉴스 게시글 ID
+	 * @return NewsPostResponseDto 조회된 게시글 정보
+	 * @throws RuntimeException 해당 ID의 게시글이 존재하지 않을 경우
+	 */
+	public NewsPostResponseDto getNewsPostForViewAndComment(Long id) { // 삭제: getNewsPost //추가: getNewsPostSimple
 		NewsPost post = newsPostRepository.findById(id).orElseThrow(() -> new RuntimeException("게시글 없음"));
 
 		int views = postViewLogRepository.getViewCountByPost(id);

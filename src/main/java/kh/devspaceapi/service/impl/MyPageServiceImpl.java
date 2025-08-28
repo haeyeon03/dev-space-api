@@ -17,6 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
+
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -147,13 +150,30 @@ public class MyPageServiceImpl implements MyPageService {
 
     @Override
     @Transactional
-    public void changeEmail(String userId, String newEmail) {
-        if (newEmail == null || newEmail.isBlank()) throw new IllegalArgumentException("이메일을 입력하세요.");
-        if (usersRepository.existsByEmail(newEmail)) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
-        }
+    public void changeEmail(String userId, String newEmailRaw) {
+        // 공백/대소문자 정리
+        String newEmail = newEmailRaw == null ? null : newEmailRaw.trim().toLowerCase();
+
         Users u = usersRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 없음: " + userId));
+
+        // 비어있거나 기존과 같으면 변경 없이 종료 (에러 아님)
+        String current = u.getEmail();
+        if (newEmail == null || newEmail.isBlank() ||
+            (current != null && newEmail.equalsIgnoreCase(current))) {
+            return;
+        }
+
+        // "본인 제외" 중복 검사: existsByEmail 결과가 true라도
+        // 그 이메일이 현재 내 이메일과 같다면 허용, 다르면 충돌
+        boolean usedBySomeone = usersRepository.existsByEmail(newEmail)
+                && (current == null || !newEmail.equalsIgnoreCase(current));
+
+        if (usedBySomeone) {
+            // 500 대신 409(CONFLICT) + JSON 에러 바디로 내려감
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다.");
+        }
+
         u.setEmail(newEmail);
     }
 

@@ -28,10 +28,9 @@ public interface UsersRepository extends JpaRepository<Users, String> {
 			AND (:role IS NULL OR LOWER(:role) IN ('admin','user') AND LOWER(u.role) = LOWER(:role))
 			""")
 	Page<Users> searchUsers(@Param("searchType") String searchType, @Param("keyword") String keyword, @Param("role") String role, Pageable pageable);
-
 	Optional<Users> findByUserId(String userId);
-	
 	boolean existsByEmail(String email);
-
     Optional<Users> findByEmail(String email);
+    boolean existsByNickname(String nickname);
+
 }

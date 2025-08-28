@@ -80,64 +80,58 @@ public class BoardPostController {
 	 * 게시글 수정 - path의 id를 엔티티에 주입 후 업데이트 - 수정 결과를 DTO로 반환
 	 */
 	@PutMapping("/{id}")
-	public ResponseEntity<BoardPostResponseDto> update(
-	        @PathVariable Long id,
-	        @RequestBody BoardPost body,
-	        @AuthenticationPrincipal CustomUserDetails principal) {
+	public ResponseEntity<BoardPostResponseDto> update(@PathVariable Long id, @RequestBody BoardPost body,
+			@AuthenticationPrincipal CustomUserDetails principal) {
 
-	    if (principal == null) {
-	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-	    }
+		if (principal == null) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+		}
 
-	    // 기존 글 조회
-	    BoardPost probe = new BoardPost();
-	    probe.setBoardPostId(id);
-	    BoardPost existing = boardPostService.select(probe);
+		// 기존 글 조회
+		BoardPost probe = new BoardPost();
+		probe.setBoardPostId(id);
+		BoardPost existing = boardPostService.select(probe);
 
-	    String me = principal.getUsername();
-	    boolean isOwner = existing.getUser() != null && me.equals(existing.getUser().getUserId());
-	    boolean isAdmin = principal.getAuthorities().stream()
-	            .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+		String me = principal.getUsername();
+		boolean isOwner = existing.getUser() != null && me.equals(existing.getUser().getUserId());
+		boolean isAdmin = principal.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
 
-	    if (!isOwner && !isAdmin) {
-	        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-	    }
+		if (!isOwner && !isAdmin) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+		}
 
-	    // 통과하면 원래 로직
-	    body.setBoardPostId(id);
-	    BoardPost updated = boardPostService.update(body);
-	    return ResponseEntity.ok(toDto(updated));
+		// 통과하면 원래 로직
+		body.setBoardPostId(id);
+		BoardPost updated = boardPostService.update(body);
+		return ResponseEntity.ok(toDto(updated));
 	}
-
 
 	/**
 	 * 게시글 삭제(소프트 삭제) - active=false 로 변경하여 목록에서 숨김 처리 - 204 No Content
 	 */
 	@DeleteMapping("/{id}")
-	public ResponseEntity<Void> delete(
-	        @PathVariable Long id,
-	        @AuthenticationPrincipal CustomUserDetails principal) throws Exception {
+	public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails principal)
+			throws Exception {
 
-	    if (principal == null) {
-	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-	    }
+		if (principal == null) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+		}
 
-	    BoardPost probe = new BoardPost();
-	    probe.setBoardPostId(id);
-	    BoardPost existing = boardPostService.select(probe);
+		BoardPost probe = new BoardPost();
+		probe.setBoardPostId(id);
+		BoardPost existing = boardPostService.select(probe);
 
-	    String me = principal.getUsername();
-	    boolean isOwner = existing.getUser() != null && me.equals(existing.getUser().getUserId());
-	    boolean isAdmin = principal.getAuthorities().stream()
-	            .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+		String me = principal.getUsername();
+		boolean isOwner = existing.getUser() != null && me.equals(existing.getUser().getUserId());
+		boolean isAdmin = principal.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
 
-	    if (!isOwner && !isAdmin) {
-	        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-	    }
+		if (!isOwner && !isAdmin) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+		}
 
-	    // 통과하면 원래 로직
-	    boardPostService.delete(probe);
-	    return ResponseEntity.noContent().build();
+		// 통과하면 원래 로직
+		boardPostService.delete(probe);
+		return ResponseEntity.noContent().build();
 	}
 
 	/**
@@ -202,41 +196,57 @@ public class BoardPostController {
 	 * BaseEntity(@PrePersist) 사용 권장
 	 */
 	@PostMapping("/{boardPostId}/comments")
-	public ResponseEntity<PostCommentResponseDto> createComment(
-	        @PathVariable Long boardPostId,
-	        @RequestBody CommentContent req,
-	        @AuthenticationPrincipal CustomUserDetails principal) {
+	public ResponseEntity<PostCommentResponseDto> createComment(@PathVariable Long boardPostId,
+			@RequestBody CommentContent req, @AuthenticationPrincipal CustomUserDetails principal) {
 
+		if (principal == null) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+		}
+
+		String userId = principal.getUsername();
+
+		PostCommentResponseDto dto = postCommentService.create(boardPostId, TargetType.BOARD, userId, req.content());
+
+		return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+	}
+
+	/**
+	 * 댓글 수정 - URL에 boardPostId, commentId 모두 필요 - 서비스 시그니처: update(targetId,
+	 * targetType, commentId, content)
+	 */
+	@PutMapping("/{boardPostId}/comments/{commentId}")
+	public ResponseEntity<PostCommentResponseDto> updateComment(
+	    @PathVariable Long boardPostId,
+	    @PathVariable Long commentId,
+	    @RequestBody CommentContent req,
+	    @AuthenticationPrincipal CustomUserDetails principal
+	) {
 	    if (principal == null) {
 	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 	    }
-
-	    String userId = principal.getUsername();
-
-	    PostCommentResponseDto dto = postCommentService.create(
-	            boardPostId, TargetType.BOARD, userId, req.content());
-
-	    return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+	    String userId = principal.getUsername(); // 로그인한 사용자 ID
+	    PostCommentResponseDto dto = postCommentService.update(
+	        boardPostId, TargetType.BOARD, commentId, req.content(), userId
+	    );
+	    return ResponseEntity.ok(dto);
 	}
 
-//	/**
-//	 * 댓글 수정 - URL에 boardPostId, commentId 모두 필요 - 서비스 시그니처: update(targetId,
-//	 * targetType, commentId, content)
-//	 */
-//	@PutMapping("/{boardPostId}/comments/{commentId}")
-//	public PostCommentResponseDto updateComment(@PathVariable Long boardPostId, @PathVariable Long commentId,
-//			@RequestBody CommentContent req) {
-//		return postCommentService.update(boardPostId, TargetType.BOARD, commentId, req.content());
-//	}
-//
-//	/**
-//	 * 댓글 삭제(소프트 삭제) - active=false 로 변경(목록/조회에서 숨김) - 204 No Content
-//	 */
-//	@DeleteMapping("/{boardPostId}/comments/{commentId}")
-//	public ResponseEntity<Void> deleteComment(@PathVariable Long boardPostId, @PathVariable Long commentId) {
-//		postCommentService.delete(boardPostId, TargetType.BOARD, commentId);
-//		return ResponseEntity.noContent().build();
-//	}
+	/**
+	 * 댓글 삭제(소프트 삭제) - active=false 로 변경(목록/조회에서 숨김) - 204 No Content
+	 */
+	@DeleteMapping("/{boardPostId}/comments/{commentId}")
+	public ResponseEntity<Void> deleteComment(
+	    @PathVariable Long boardPostId,
+	    @PathVariable Long commentId,
+	    @AuthenticationPrincipal CustomUserDetails principal
+	) {
+	    if (principal == null) {
+	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+	    }
+	    String userId = principal.getUsername();
+	    postCommentService.delete(boardPostId, TargetType.BOARD, commentId, userId);
+	    return ResponseEntity.noContent().build();
+	}
 
 	/**
 	 * 요청 바디(JSON)용 DTO - {"content":"내용"} 형태로 받기 위함

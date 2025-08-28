@@ -57,29 +57,40 @@ public class MyPageController {
         return ResponseEntity.ok(myPageService.getMe(userId));
     }
 
-    /** 내 프로필 수정 (닉네임/성별/생년월일) */
+    /** 내 프로필 수정 (닉네임/성별/생년월일) + 이메일도 같이 처리 */
     @PutMapping("/update")
     public ResponseEntity<MyProfileResponseDto> updateProfile(
             @RequestBody UpdateProfileRequest req,
-            @AuthenticationPrincipal CustomUserDetails principal) {
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
         if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         String userId = principal.getUsername();
-        return ResponseEntity.ok(myPageService.updateProfile(userId, req));
+
+        // 1) 기본 프로필 항목 업데이트
+        MyProfileResponseDto updated = myPageService.updateProfile(userId, req);
+
+        // 2) 요청에 email이 포함되어 있으면 이메일도 함께 변경
+        //    (백엔드 한 줄 옵션을 서비스에 넣는 대신, 컨트롤러에서 분기 처리)
+        if (req.getEmail() != null && !req.getEmail().isBlank()) {
+            myPageService.changeEmail(userId, req.getEmail());
+            // 3) 최종적으로 최신 상태 재조회해서 반환
+            updated = myPageService.getMe(userId);
+        }
+
+        return ResponseEntity.ok(updated);
     }
 
     /** 프로필 이미지 업로드 */
     @PostMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadProfileImage(
             @RequestParam("file") MultipartFile file,
-            @AuthenticationPrincipal CustomUserDetails principal) {
-
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         if (file == null || file.isEmpty()) {
-            return ResponseEntity.badRequest().body(
-                java.util.Map.of("message", "파일이 없습니다.")
-            );
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", "파일이 없습니다."));
         }
 
         try {
@@ -87,21 +98,16 @@ public class MyPageController {
             log.info("uploadProfileImage by principal.username={}", userId);
             return ResponseEntity.ok(myPageService.updateProfileImage(userId, file));
         } catch (IllegalArgumentException e) {
-            // 사용자 없음 / 이미지 아님 등 비즈니스 에러는 400
             log.warn("uploadProfileImage bad request: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(
-                java.util.Map.of("message", e.getMessage())
-            );
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
         } catch (Exception e) {
-            // 디버그 편의: 500일 때 상세 내용도 내려줌
             log.error("uploadProfileImage failed", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                java.util.Map.of(
-                    "message", "업로드 실패",
-                    "error", e.getClass().getSimpleName(),
-                    "detail", e.getMessage()
-                )
-            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of(
+                            "message", "업로드 실패",
+                            "error", e.getClass().getSimpleName(),
+                            "detail", e.getMessage()
+                    ));
         }
     }
 
@@ -110,7 +116,8 @@ public class MyPageController {
     public ResponseEntity<Page<BoardPostResponseDto>> myPosts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @AuthenticationPrincipal CustomUserDetails principal) {
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
         if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         String userId = principal.getUsername();
         Pageable pageable = PageRequest.of(page, size); // 정렬은 서비스에서 최신순 고정
@@ -121,22 +128,37 @@ public class MyPageController {
     @PutMapping("/password")
     public ResponseEntity<Void> changePassword(
             @RequestBody ChangePasswordRequest req,
-            @AuthenticationPrincipal CustomUserDetails principal) {
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
         if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         String userId = principal.getUsername();
         myPageService.changePassword(userId, req.getCurrentPassword(), req.getNewPassword());
         return ResponseEntity.noContent().build();
     }
 
-    /** 이메일 변경 */
+    /** 이메일 변경 (개별 엔드포인트도 유지) */
     @PutMapping("/email")
     public ResponseEntity<Void> changeEmail(
             @RequestBody ChangeEmailRequest req,
-            @AuthenticationPrincipal CustomUserDetails principal) {
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
         if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         String userId = principal.getUsername();
         myPageService.changeEmail(userId, req.getNewEmail());
         return ResponseEntity.noContent().build();
+    }
+
+    /** 이메일 중복확인 */
+    @GetMapping("/check-email")
+    public ResponseEntity<java.util.Map<String, Object>> checkEmail(
+            @RequestParam String email,
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        boolean available = myPageService.isEmailAvailable(email);
+        return ResponseEntity.ok(java.util.Map.of("available", available));
     }
 
     /** 계정 탈퇴(소프트 삭제: active=false) */
@@ -184,5 +206,18 @@ public class MyPageController {
             log.error("getProfileImage failed for {}", filename, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    // 닉네임 중복확인
+    @GetMapping("/check-nickname")
+    public ResponseEntity<java.util.Map<String, Object>> checkNickname(
+            @RequestParam String nickname,
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        boolean available = myPageService.isNicknameAvailable(nickname);
+        return ResponseEntity.ok(java.util.Map.of("available", available));
     }
 }

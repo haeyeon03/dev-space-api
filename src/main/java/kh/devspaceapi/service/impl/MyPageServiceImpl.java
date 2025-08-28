@@ -217,4 +217,22 @@ public class MyPageServiceImpl implements MyPageService {
         }
         return base;
     }
+    
+    /** 닉네임 중복 확인 */
+    @Override
+    public boolean isNicknameAvailable(String nickname) {
+        if (nickname == null || nickname.isBlank()) {
+            return false; // 빈 닉네임은 불가
+        }
+        return !usersRepository.existsByNickname(nickname);
+    }
+    
+    /** 이메일 중복 확인 */
+    @Override
+    public boolean isEmailAvailable(String email) {
+        if (email == null || email.isBlank()) {
+            return false; // 빈 값은 불가
+        }
+        return !usersRepository.existsByEmail(email);
+    }
 }

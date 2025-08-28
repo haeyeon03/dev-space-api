@@ -17,4 +17,8 @@ public interface MyPageService {
     void changePassword(String userId, String currentPw, String newPw);
     void changeEmail(String userId, String newEmail);
     void deactivate(String userId);
+    boolean isNicknameAvailable(String nickname);
+    boolean isEmailAvailable(String email);
+
+
 }

@@ -62,7 +62,6 @@ public class NewsPostServiceImpl implements NewsPostService {
 	@Override
 	public PageResponse<NewsPostResponseDto> getNewsPost(NewsPostRequestDto request) {
 
-		// 페이지 번호 0 기반 맞춤
 		int curPage = request.getCurPage() > 0 ? request.getCurPage() - 1 : 0;
 		int pageSize = request.getPageSize();
 
@@ -71,30 +70,27 @@ public class NewsPostServiceImpl implements NewsPostService {
 
 		Page<NewsPost> newsPostPage;
 
-		// 검색 조건에 따라 분기
+		Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
+
+		// 검색 조건 분기
 		if ((title == null || title.isBlank()) && (content == null || content.isBlank())) {
-			// 전체 조회
-			Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
 			newsPostPage = newsPostRepository.findAllByActiveTrue(pageable);
 		} else if ((title != null && !title.isBlank()) && (content == null || content.isBlank())) {
-			// 제목만 검색
-			Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
 			newsPostPage = newsPostRepository.findAllByTitleContainingAndActiveTrue(title, pageable);
 		} else if ((title == null || title.isBlank()) && (content != null && !content.isBlank())) {
-			// 내용만 검색
-			Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
 			newsPostPage = newsPostRepository.findAllByContentContainingAndActiveTrue(content, pageable);
 		} else {
-			// 제목 + 내용 OR 검색
-			Pageable pageable = PageRequest.of(curPage, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
-			String keyword = title; // 프론트에서 searchText 동일하게 전달
-			newsPostPage = newsPostRepository.findByTitleOrContentContaining(keyword, pageable);
+			newsPostPage = newsPostRepository.findByTitleOrContentContaining(title, pageable);
 		}
 
 		// 엔티티 -> DTO 변환
 		Page<NewsPostResponseDto> dtoPage = newsPostPage.map(post -> {
 			int views = postViewLogRepository.getViewCountByPost(post.getNewsPostId());
-			int comments = postViewLogRepository.getCommentCountByPost(post.getNewsPostId());
+
+			// 댓글 수를 항상 active=true 기준으로 계산
+			int comments = postCommentRepository.countByTargetIdAndTargetTypeAndActiveTrue(post.getNewsPostId(),
+					TargetType.NEWS);
+
 			return newPostMapper.toDto(post, views, comments);
 		});
 
@@ -217,15 +213,14 @@ public class NewsPostServiceImpl implements NewsPostService {
 	 * @return NewsPostResponseDto 조회된 게시글 정보
 	 * @throws RuntimeException 해당 ID의 게시글이 존재하지 않을 경우
 	 */
-	public NewsPostResponseDto getNewsPostForViewAndComment(Long id) { // 삭제: getNewsPost //추가: getNewsPostSimple
+	public NewsPostResponseDto getNewsPostForViewAndComment(Long id) {
 		NewsPost post = newsPostRepository.findById(id).orElseThrow(() -> new RuntimeException("게시글 없음"));
 
 		int views = postViewLogRepository.getViewCountByPost(id);
-		int comments = postViewLogRepository.getCommentCountByPost(id);
+		int comments = postCommentRepository.countByTargetIdAndTargetTypeAndActiveTrue(id, TargetType.NEWS);
 
 		return NewsPostResponseDto.builder().newsPostId(post.getNewsPostId()).title(post.getTitle())
 				.content(post.getContent()).imageUrls(post.getImageUrls()).pubDate(post.getPubDate()).viewCount(views)
 				.commentCount(comments).build();
 	}
-
 }

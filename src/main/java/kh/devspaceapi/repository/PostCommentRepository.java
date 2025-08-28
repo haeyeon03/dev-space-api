@@ -1,6 +1,5 @@
 package kh.devspaceapi.repository;
 
-
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -22,14 +21,13 @@ public interface PostCommentRepository extends JpaRepository<PostComment, Long> 
 
 	/**
 	 * 특정 대상(targetId, targetType)의 댓글 전체 목록을 commentId 내림차순으로 반환 (active 필터 없음).
-	 * 관리자/내부용으로 “숨김 포함 전부” 볼 때 사용 가능.
-	 * 정렬만, 페이징 없음(List 반환).
+	 * 관리자/내부용으로 “숨김 포함 전부” 볼 때 사용 가능. 정렬만, 페이징 없음(List 반환).
 	 */
 	@EntityGraph(attributePaths = "user")
 	List<PostComment> findByTargetIdAndTargetTypeOrderByPostCommentIdDesc(Long targetId, TargetType targetType);
 
-	/** 특정 대상(targetId, targetType)의 댓글 전체 목록 (active 필터/정렬 없음).
-	 * 숨김 포함 전부 반환.
+	/**
+	 * 특정 대상(targetId, targetType)의 댓글 전체 목록 (active 필터/정렬 없음). 숨김 포함 전부 반환.
 	 */
 	@EntityGraph(attributePaths = "user")
 	List<PostComment> findByTargetIdAndTargetType(Long targetId, TargetType targetType);
@@ -43,6 +41,7 @@ public interface PostCommentRepository extends JpaRepository<PostComment, Long> 
 	@EntityGraph(attributePaths = "user")
 	Page<PostComment> findCommentsByTargetIdAndTargetTypeAndActiveTrue(Long newsPostId, TargetType news,
 			Pageable pageable);
-	
-	
+
+	int countByTargetIdAndTargetTypeAndActiveTrue(Long targetId, TargetType targetType);
+
 }

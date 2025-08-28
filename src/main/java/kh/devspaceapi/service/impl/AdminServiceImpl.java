@@ -228,6 +228,7 @@ public class AdminServiceImpl implements AdminService {
 		up.setDurationSec(req.getDurationSec());
 
 		userPenaltyRepository.save(up);
+		usersRepository.deactivateUser(userId);
 		//수정된 내용 전달을 위한 dto
 		return toDetailDto(user);
 	}
@@ -247,10 +248,12 @@ public class AdminServiceImpl implements AdminService {
 					long newDuration = Duration.between(latest.getEffectiveAt(), now).getSeconds();
 					latest.setDurationSec(Math.max(newDuration, 0));
 					userPenaltyRepository.save(latest);
+					usersRepository.activateUser(userId);
 				} else {
 					// effectiveAt이 미래면 즉시 해제하려면 duration=0
 					latest.setDurationSec(0);
 					userPenaltyRepository.save(latest);
+					usersRepository.activateUser(userId);
 				}
 			}
 		});

@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -32,5 +33,14 @@ public interface UsersRepository extends JpaRepository<Users, String> {
 	boolean existsByEmail(String email);
     Optional<Users> findByEmail(String email);
     boolean existsByNickname(String nickname);
+    
+    //유저 active 변경
+    @Modifying
+    @Query("UPDATE Users u SET u.active = false WHERE u.userId = :userId")
+    void deactivateUser(@Param("userId") String userId);
+
+    @Modifying
+    @Query("UPDATE Users u SET u.active = true WHERE u.userId = :userId")
+    void activateUser(@Param("userId") String userId);
 
 }

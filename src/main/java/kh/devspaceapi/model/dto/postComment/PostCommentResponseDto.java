@@ -1,10 +1,13 @@
 package kh.devspaceapi.model.dto.postComment;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 import kh.devspaceapi.model.dto.users.UsersResponseDto;
 import kh.devspaceapi.model.entity.enums.TargetType;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -18,4 +21,6 @@ public class PostCommentResponseDto {
     
     private String userNickname;
     private UsersResponseDto user;
+    
+    private LocalDateTime createdAt;
 }

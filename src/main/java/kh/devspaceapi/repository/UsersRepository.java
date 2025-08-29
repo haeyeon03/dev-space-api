@@ -20,13 +20,24 @@ public interface UsersRepository extends JpaRepository<Users, String> {
 
 	// 관리자 유저검색
 	@Query("""
-			SELECT u
-			FROM Users u
-			WHERE (:searchType IS NULL OR :keyword IS NULL OR
-			      (LOWER(:searchType) = 'nickname' AND LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%')))
-			      OR (LOWER(:searchType) = 'userId' AND LOWER(u.userId) LIKE LOWER(CONCAT('%', :keyword, '%')))
-			)
-			AND (:role IS NULL OR LOWER(:role) IN ('admin','user') AND LOWER(u.role) = LOWER(:role))
+			  SELECT u
+			  FROM Users u
+			  WHERE (
+			    :keyword IS NULL
+			    OR (
+			      (:searchType IS NULL OR LOWER(:searchType) = 'nickname')
+			        AND LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))
+			    )
+			    OR (
+			      (:searchType IS NULL OR LOWER(:searchType) = 'userid')
+			        AND LOWER(u.userId) LIKE LOWER(CONCAT('%', :keyword, '%'))
+			    )
+			  )
+			  AND (
+			    :role IS NULL
+			    OR LOWER(u.role) = LOWER(:role)              
+			    OR LOWER(u.role) = CONCAT('role_', LOWER(:role))  
+			  )
 			""")
 	Page<Users> searchUsers(@Param("searchType") String searchType, @Param("keyword") String keyword, @Param("role") String role, Pageable pageable);
 	Optional<Users> findByUserId(String userId);

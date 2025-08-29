@@ -17,9 +17,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Users user = usersRepository.findById(username).orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 사용자입니다."));
-        if (!user.isActive()) { // 활성화 여부 체크
-            throw new UsernameNotFoundException("비활성화된 사용자입니다.");
-        }
         return new CustomUserDetails(user.getUserId(), user.getPassword(), user.getNickname(), user.getEmail(), user.getRole());
     }
 }

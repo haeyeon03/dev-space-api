@@ -3,7 +3,6 @@ package kh.devspaceapi.service.impl;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,6 +16,7 @@ import kh.devspaceapi.model.entity.PostViewLog;
 import kh.devspaceapi.model.entity.Users;
 import kh.devspaceapi.model.entity.enums.TargetType;
 import kh.devspaceapi.repository.BoardPostRepository;
+import kh.devspaceapi.repository.PostCommentRepository;
 import kh.devspaceapi.repository.PostViewLogRepository;
 import kh.devspaceapi.repository.UsersRepository;
 import kh.devspaceapi.service.BoardPostService;
@@ -36,6 +36,7 @@ public class BoardPostServiceImpl implements BoardPostService {
 	private final BoardPostRepository boardPostRepository;
 	private final PostViewLogRepository postViewLogRepository;
 	private final UsersRepository usersRepository;
+	private final PostCommentRepository postCommentRepository;
 
 	@PersistenceContext
 	private EntityManager em; // PostViewLog 합계 집계용
@@ -204,11 +205,7 @@ public class BoardPostServiceImpl implements BoardPostService {
 	 */
 	@Override
 	public int getCommentCountOf(Long postId) {
-		Long sum = em
-				.createQuery("select coalesce(sum(p.commentCount),0) from PostViewLog p "
-						+ "where p.targetId = :id and p.targetType = :type", Long.class)
-				.setParameter("id", postId).setParameter("type", TargetType.BOARD).getSingleResult();
-		return sum.intValue();
+		return postCommentRepository.countByTargetIdAndTargetTypeAndActiveTrue(postId, TargetType.BOARD);
 	}
 
 	@Override

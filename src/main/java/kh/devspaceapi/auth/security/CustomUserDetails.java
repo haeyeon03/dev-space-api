@@ -22,6 +22,7 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
     private String nickname;
     private String email;
     private String role;
+    private boolean active;
 
     public CustomUserDetails(String userId, String role) {
         this.userId = userId;
@@ -47,6 +48,11 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
     public String getName() {
         return email;
     }
+
+    @Override
+    public boolean isEnabled() {
+        return active;
+    };
 
     @Override
     public Map<String, Object> getAttributes() {

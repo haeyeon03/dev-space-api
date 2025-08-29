@@ -6,8 +6,11 @@ import kh.devspaceapi.comm.exception.ErrorCode;
 import kh.devspaceapi.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -28,7 +31,11 @@ public class AuthServiceImpl implements AuthService {
         try {
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userId, password));
             return (CustomUserDetails) authentication.getPrincipal();
-        } catch (Exception e) {
+        } catch (BadCredentialsException e) {
+            throw new BusinessException(ErrorCode.AUTH_INVALID_USER);
+        } catch (DisabledException e) {
+            throw new BusinessException(ErrorCode.AUTH_USER_DISABLED);
+        }  catch (Exception e) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_USER);
         }
     }

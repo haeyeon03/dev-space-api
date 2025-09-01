@@ -25,8 +25,14 @@ public class Users extends BaseEntity {
     private String gender;
     private String provider;
     private String email;
+    @Column(name = "ROLE")
     private String role;
     private LocalDate birthdate;
     @Column(name = "profile_image_url", length = 512)
     private String profileImageUrl;
+    
+    public void setRole(String role) {
+        this.role = (role != null ? role.toUpperCase() : null);
+    }
+    
 }
